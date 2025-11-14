@@ -1,0 +1,73 @@
+---
+title: "Keyword Grouping Accuracy"
+---
+
+### What is keyword grouping accuracy?
+
+The minimum number of URLs in the SERPs required to group keywords. The selected grouping accuracy will influence the number of keywords in a single group. The higher the accuracy, the fewer keywords will be put into a single group.
+
+By default, we use the value 3. It means if we see 3 common URLs for keywords, these keywords will be put into a single cluster.
+
+e.g. Let's take these two keywords as examples.
+
+**Keyword 1**: weight loss with shots
+
+**Keyword 2:** weight loss with injections
+
+For the keyword '**weight loss with shots**, the SERPs in the United States return the following top 10 results:
+
+```text
+www.mayoclinic.org
+www.cuimc.columbia.edu
+www.cuimc.columbia.edu
+www.medicalnewstoday.com
+www.cuimc.columbia.edu
+www.stylecraze.com
+www.fda.gov
+www.simply-slim.com
+www.goodrx.com
+www.wegovy.com
+```
+
+For the keyword '**weight loss with injections**' the SERPs in the United States return the following top 10 results:
+
+```text
+www.fda.gov
+www.goodrx.com
+www.goodrx.com
+www.saxenda.com
+www.cuimc.columbia.edu
+www.wegovy.com
+www.goodrx.com
+www.medicalnewstoday.com
+www.scientificamerican.com
+www.hopkinsmedicine.org
+```
+
+We can see that there are four common URLs
+
+```
+www.cuimc.columbia.edu
+www.goodrx.com
+www.medicalnewstoday.com
+www.fda.gov
+```
+
+So, we will cluster/group these into a single cluster.
+
+<img src="/images/Image 2022-08-11 at 9.14.29 PM (1).jpg" alt="" />
+
+You can change the values in our advanced settings. Go to Keyword clustering and click the advanced settings toggle. 
+
+<Info>
+
+Important to remember, we look at the full ranking URL when clustering and not the root domain. 
+
+</Info>
+
+<img src="/images/CleanShot 2024-09-05 at 11.58.10@2x.png" alt="" />
+
+1. Toggle advanced settings
+2. Select the [algorithm type](clustering-types)
+3. SERP grouping accuracy
+4. [Topical cluster strength](topical-cluster-creation-method)

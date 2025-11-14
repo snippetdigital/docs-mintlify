@@ -1,0 +1,98 @@
+---
+title: "Clustering Types"
+---
+
+### We have multiple keyword clustering algorithms.
+
+You can change the clustering algorithm in our advanced settings. Go to Keyword clustering and click the advanced settings toggle.
+
+Select the algorithm.
+
+<img src="/images/CleanShot 2024-09-05 at 12.02.31@2x.png" alt="" />
+
+### What are the keyword clustering algorithms and how do they work?
+
+### Centroids
+
+We take the keyword with the largest search volume and then group all other keywords which share x number of URLs in common with it from the top 7 (x can be changed by you, but it is set at 4 by default). All keywords in the group will have a common URL (the one with the highest search volume), but they won’t necessarily have common URLs with each other. 
+
+This method of clustering generally results in larger clusters.
+
+### Agglomerative
+
+All keywords are compared against one another and are clustered into a group if they share the x number of URLs in common from the top 7 (x can be changed by you, but it is set at 4 by default).  
+
+This method of grouping generally results in smaller, tighter clusters and takes a little longer to produce the report as every keyword is being compared against each other. 
+
+### Which algorithm should I choose?
+
+#### Centroids Algorithm
+
+**Advantages:**
+
+1. **Simplicity and Speed:** This algorithm can be faster as it only compares keywords against one key term (the one with the highest search volume).
+2. **Larger Clusters:** It generally creates larger clusters, which might benefit a user trying to create broad topics or themes.
+
+**Disadvantages:**
+
+1. **Lack of Nuance**: It may create clusters that are somewhat arbitrary or lack specificity because they're hinged on a single term.
+2. **Missed Opportunities**: Some potentially relevant keyword clusters may be overlooked if they do not have enough commonality with the high-volume keyword.
+
+**Choose the Centroids Algorithm if:**
+
+* You're seeking larger, overarching themes or topics.
+
+#### Agglomerative Algorithm
+
+**Advantages:**
+
+1. **Specificity**: It typically produces smaller, more precise clusters, which could be more relevant for targeted marketing or SEO campaigns.
+2. **Holistic View**: As all keywords are compared against each other, it may uncover unique or unexpected keyword groupings.
+3. **Thoroughness**: This algorithm can be more robust and reliable for forming tightly-knit, highly relevant clusters.
+
+**Disadvantages:**
+
+1. **Computational Intensity**: This approach may take longer for you to get your report.
+
+**Recommendations for Customers**
+
+Choose the Centroid Algorithm if:
+
+* You want to identify broad topics or themes before focusing on specific areas.
+  * Use Case: Start by running 200,000+ keywords through the centroid algorithm to discover overarching topics you may not be covering. Once identified, you can then use the agglomerative algorithm to break down these broad themes into specific pages that need to be created.
+
+Choose the Agglomerative Algorithm if:
+
+* You seek accuracy and detailed insights into which pages need to be created.
+
+<Tip>
+For most customers and niches, the agglomerative algorithm will generally be the most useful starting point.
+</Tip>
+
+<iframe
+  src="https://fast.wistia.net/embed/iframe/oaeqllw2a4"
+  title="Video"
+  allow="autoplay; fullscreen"
+  allowTransparency="true"
+  frameBorder="0"
+  scrolling="no"
+  className="wistia_embed"
+  name="wistia_embed"
+  width="100%"
+  height="450"
+  style={{ width: '100%', borderRadius: '0.5rem' }}
+></iframe>
+
+#### Recommendations for Customers
+
+**Choose the Agglomerative Algorithm if:**
+
+* You're working with a relatively smaller set of keywords.
+* Uncovering unique and tightly-knit clusters is important to your strategy.
+* You're willing to allocate more time for thorough analysis.
+
+**For most customers, in most niches, we recommend sticking with the Agglomerative algorithm.**
+
+### Why do we analyse only the top 7 organic results instead of 10?
+
+In recent months, we’ve noticed that many search queries are increasingly dominated by SERP features like featured snippets, AI Overviews, people also ask boxes, and more. These elements are pushing traditional organic listings further down the page, often below the fold. As a result, the top 7 organic results now provide a more accurate representation of what users actually see and engage with. It’s a shift driven by how the SERP landscape has evolved and our analysis adapts accordingly.

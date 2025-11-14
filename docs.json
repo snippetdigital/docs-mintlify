@@ -1,7 +1,7 @@
 {
   "$schema": "https://mintlify.com/docs.json",
   "theme": "mint",
-  "name": "Mint Starter Kit",
+  "name": "Keyword Insights Documentation",
   "colors": {
     "primary": "#16A34A",
     "light": "#07C983",
@@ -9,79 +9,196 @@
   },
   "favicon": "/favicon.svg",
   "navigation": {
-    "tabs": [
+    "groups": [
       {
-        "tab": "Guides",
-        "groups": [
+        "group": "Getting Started",
+        "pages": [
+          "index"
+        ]
+      },
+      {
+        "group": "Learning Center",
+        "pages": [
+          "learning-center/keyword-insights-tool-workflow",
           {
-            "group": "Getting started",
+            "group": "The Features",
             "pages": [
-              "index",
-              "quickstart",
-              "development"
+              "learning-center/the-features/README",
+              {
+                "group": "Keyword Clustering",
+                "pages": [
+                  "learning-center/the-features/keyword-clustering/README",
+                  {
+                    "group": "The Advanced Settings",
+                    "pages": [
+                      "learning-center/the-features/keyword-clustering/the-advanced-settings/README",
+                      "learning-center/the-features/keyword-clustering/the-advanced-settings/keyword-grouping-accuracy",
+                      "learning-center/the-features/keyword-clustering/the-advanced-settings/topical-cluster-creation-method",
+                      "learning-center/the-features/keyword-clustering/the-advanced-settings/clustering-types"
+                    ]
+                  }
+                ]
+              },
+              "learning-center/the-features/topical-clusters",
+              "learning-center/the-features/competitor-visibility",
+              "learning-center/the-features/search-intent-context",
+              "learning-center/the-features/keyword-discovery",
+              "learning-center/the-features/content-briefs",
+              "learning-center/the-features/writer-assistant",
+              "learning-center/the-features/ai-writer-agent"
             ]
           },
           {
-            "group": "Customization",
+            "group": "Freemium Tools",
             "pages": [
-              "essentials/settings",
-              "essentials/navigation"
-            ]
-          },
-          {
-            "group": "Writing content",
-            "pages": [
-              "essentials/markdown",
-              "essentials/code",
-              "essentials/images",
-              "essentials/reusable-snippets"
-            ]
-          },
-          {
-            "group": "AI tools",
-            "pages": [
-              "ai-tools/cursor",
-              "ai-tools/claude-code",
-              "ai-tools/windsurf"
+              "learning-center/freemium-tools/README",
+              "learning-center/freemium-tools/serp-similarity",
+              "learning-center/freemium-tools/serp-analyzer",
+              "learning-center/freemium-tools/title-ai-blog-idea-generator"
             ]
           }
         ]
       },
       {
-        "tab": "API reference",
-        "groups": [
+        "group": "User Guide",
+        "pages": [
+          "user-guide/how-to-get-the-usd1-trial",
           {
-            "group": "API documentation",
+            "group": "How To Build Keyword Lists",
             "pages": [
-              "api-reference/introduction"
-            ]
-          },
-          {
-            "group": "Endpoint examples",
-            "pages": [
-              "api-reference/endpoint/get",
-              "api-reference/endpoint/create",
-              "api-reference/endpoint/delete",
-              "api-reference/endpoint/webhook"
+              "user-guide/how-to-build-keyword-lists/README",
+              "user-guide/how-to-build-keyword-lists/using-keyword-discovery",
+              "user-guide/how-to-build-keyword-lists/google-search-console-integration",
+              "user-guide/how-to-build-keyword-lists/using-google-keyword-planner",
+              "user-guide/how-to-build-keyword-lists/using-ahrefs-semrush",
+              "user-guide/how-to-build-keyword-lists/google-search-console-manual"
             ]
           }
         ]
+      },
+      {
+        "group": "Understanding the Output",
+        "pages": [
+          "understanding-the-output/how-to-interpret-clusters-with-in-app-visualizations",
+          "understanding-the-output/how-to-interpret-clusters-in-google-sheets",
+          "understanding-the-output/how-to-interpret-topical-clusters",
+          "understanding-the-output/how-to-interpret-context-intent"
+        ]
+      },
+      {
+        "group": "Tool Use Cases",
+        "pages": [
+          "tool-use-cases/finding-keyword-cannibalisation-case-study-1",
+          "tool-use-cases/finding-keyword-cannibalisation-case-study-2",
+          "tool-use-cases/finding-content-gaps",
+          "tool-use-cases/uncover-keyword-opportunities",
+          "tool-use-cases/find-intent-misalignment",
+          "tool-use-cases/building-service-level-pages",
+          "tool-use-cases/finding-reddit-opportunities"
+        ]
+      },
+      {
+        "group": "Account Management",
+        "pages": [
+          {
+            "group": "Pricing",
+            "pages": [
+              "account-management/pricing/README",
+              {
+                "group": "Subscription",
+                "pages": [
+                  "account-management/pricing/subscription/README",
+                  "account-management/pricing/subscription/universal-credits-explained"
+                ]
+              },
+              "account-management/pricing/legacy-subscriptions"
+            ]
+          },
+          {
+            "group": "Subscription Management",
+            "pages": [
+              "account-management/subscription-management/README",
+              "account-management/subscription-management/buying-a-subscription",
+              "account-management/subscription-management/cancelling-a-subscription",
+              "account-management/subscription-management/pausing-a-subscription",
+              "account-management/subscription-management/downgrading-a-subscription",
+              "account-management/subscription-management/upgrading-a-subscription",
+              "account-management/subscription-management/subscription-renewal-and-payment-policy"
+            ]
+          },
+          {
+            "group": "Payments & Credit Cards",
+            "pages": [
+              "account-management/payments-and-credit-cards/README",
+              "account-management/payments-and-credit-cards/downloading-invoices",
+              "account-management/payments-and-credit-cards/add-or-change-vat-number",
+              "account-management/payments-and-credit-cards/changing-billing-name-or-address",
+              "account-management/payments-and-credit-cards/how-to-add-a-backup-payment-method",
+              "account-management/payments-and-credit-cards/changing-credit-card-details"
+            ]
+          },
+          {
+            "group": "Team Management",
+            "pages": [
+              "account-management/team-management/README",
+              "account-management/team-management/adding-a-team-member",
+              "account-management/team-management/sharing-team-reports",
+              "account-management/team-management/sharing-projects",
+              "account-management/team-management/user-seats"
+            ]
+          }
+        ]
+      },
+      {
+        "group": "Data Retention",
+        "pages": [
+          "data-retention/data-storage-and-limits"
+        ]
+      },
+      {
+        "group": "Integrations",
+        "pages": [
+          "integrations/google-search-console",
+          "integrations/wordpress"
+        ]
+      },
+      {
+        "group": "Utilities",
+        "pages": [
+          "utilities/workspaces"
+        ]
+      },
+      {
+        "group": "API",
+        "pages": [
+          "api/how-to-use-the-public-api",
+          {
+            "group": "API Use Cases",
+            "pages": [
+              "api/api-use-cases/README",
+              "api/api-use-cases/public-api-clustering",
+              "api/api-use-cases/n8n-integration"
+            ]
+          }
+        ]
+      },
+      {
+        "group": "FAQs",
+        "pages": [
+          "faqs/frequently-asked-questions",
+          "faqs/language-support",
+          "faqs/exporting-data"
+        ]
+      },
+      {
+        "group": "Help & Support",
+        "pages": [
+          "help-and-support/getting-support",
+          "help-and-support/affiliate-program",
+          "help-and-support/changelog"
+        ]
       }
-    ],
-    "global": {
-      "anchors": [
-        {
-          "anchor": "Documentation",
-          "href": "https://mintlify.com/docs",
-          "icon": "book-open-cover"
-        },
-        {
-          "anchor": "Blog",
-          "href": "https://mintlify.com/blog",
-          "icon": "newspaper"
-        }
-      ]
-    }
+    ]
   },
   "logo": {
     "light": "/logo/light.svg",
@@ -91,32 +208,32 @@
     "links": [
       {
         "label": "Support",
-        "href": "mailto:hi@mintlify.com"
+        "href": "mailto:support@keywordinsights.ai"
       }
     ],
     "primary": {
       "type": "button",
       "label": "Dashboard",
-      "href": "https://dashboard.mintlify.com"
+      "href": "https://app.keywordinsights.ai"
     }
   },
   "contextual": {
     "options": [
-     "copy",
-     "view",
-     "chatgpt",
-     "claude",
-     "perplexity",
-     "mcp",
-     "cursor",
-     "vscode"
-   ]
+      "copy",
+      "view",
+      "chatgpt",
+      "claude",
+      "perplexity",
+      "mcp",
+      "cursor",
+      "vscode"
+    ]
   },
   "footer": {
     "socials": {
-      "x": "https://x.com/mintlify",
-      "github": "https://github.com/mintlify",
-      "linkedin": "https://linkedin.com/company/mintlify"
+      "x": "https://x.com/keywordinsights",
+      "github": "https://github.com/keywordinsights",
+      "linkedin": "https://linkedin.com/company/keywordinsights"
     }
   }
 }

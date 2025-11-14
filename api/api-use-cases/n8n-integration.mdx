@@ -1,0 +1,83 @@
+---
+title: "N8N integration"
+---
+
+On this page, you'll find the guide on how to connect Keyword Insights API with N8N to run clustering. 
+
+### Step 1
+
+#### Authentication
+
+Use an HTTP Requst node, ensure the route is correct 
+
+\`[https://api.keywordinsights.ai//authentication/login/](https://api.keywordinsights.ai/authentication/login/)\`and the method is "POST".Finally, enable the body option, and enable JSON type, and pass the following by replacing the values of your account email/password.
+
+```
+{
+  "email": "<email>",
+  "password": "<password>"
+}
+```
+
+<img src="/images/image (28).png" alt="" />
+
+
+
+### Step 2
+
+#### Creating a clustering order
+
+Ensure the output of the Auth node shows in the second node.
+
+<img src="/images/image (29).png" alt="" />
+
+Update the following settings:
+
+
+* Method -> POST
+* URL -> [https://api.keywordinsights.ai/api/keywords-insights/order/](https://api.keywordinsights.ai/api/keywords-insights/order/)
+* Send Headers -> Enabled
+* Header Parameter Key -> Authorization
+* Header Paramater Value -> Bearer `{'{ $json.result.access_token }'}` 
+* Send Body -> Enabled
+* JSON, Using JSON
+
+<img src="/images/image (30).png" alt="" />
+
+Paste the following json into the body, make sure to update the keywords, volumes you want to cluster, and URL, you can also customize further based on the configuration you want. You can also pass `folder_id` if you want it placed in a specific folder in the platform.
+
+```
+{
+  "clustering_method": "volume",
+  "device": "desktop",
+  "grouping_accuracy": 4,
+  "hub_creation_method": "medium",
+  "insights": [
+    "cluster",
+    "rank",
+    "context"
+  ],
+  "language": "en",
+  "location": "United States",
+  "project_name": "A Clustering project",
+  "keywords": [
+    "keyword clustering",
+    "keyword research",
+    "topical authority",
+    "clustering methods",
+    "page authority"
+  ],
+  "search_volumes": [
+    2300,
+    3210,
+    5500,
+    2100,
+    1200
+  ],
+  "url": "https://www.keywordinsights.ai/"
+}
+```
+
+<img src="/images/image (31).png" alt="" />
+
+That's all! 
