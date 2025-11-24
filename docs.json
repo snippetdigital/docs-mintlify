@@ -94,7 +94,8 @@
           "tool-use-cases/uncover-keyword-opportunities",
           "tool-use-cases/find-intent-misalignment",
           "tool-use-cases/building-service-level-pages",
-          "tool-use-cases/finding-reddit-opportunities"
+          "tool-use-cases/finding-reddit-opportunities",
+          "tool-use-cases/test"
         ]
       },
       {
