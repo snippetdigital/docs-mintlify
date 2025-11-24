@@ -1,6 +1,6 @@
 {
   "$schema": "https://mintlify.com/docs.json",
-  "theme": "willow",
+  "theme": "mint",
   "name": "Keyword Insights Documentation",
   "colors": {
     "primary": "#4b4492",
