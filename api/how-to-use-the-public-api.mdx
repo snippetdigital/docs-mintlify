@@ -2,124 +2,152 @@
 title: "How to use the Public API?"
 ---
 
-Our public API documentation is driven by Swagger and can be accessed [here](https://api.keywordinsights.ai/apidocs/).
+Our public API is documented with Swagger and can be accessed at [https://api.keywordinsights.ai/apidocs](https://api.keywordinsights.ai/apidocs/).
 
-### Prerequisites to use the public API 
+### Prerequisites to use the public API
 
-You need to have a valid Keyword Insights subscription in order to use the public API.
+You need to have a valid **Keyword Insights** subscription in order to use the public API.
 
-Before using the public API, you need to acquire a bearer token for authentication so that our servers can verify who you are and that you have permission to use the API.
+Before using the public API, you must acquire a **Bearer token** for authentication so that our servers can verify who you are and that you have permission to use the API.
 
+### How to use the interactive public API documentation
 
+To use the Swagger UI interactively, you must first be authenticated.  
+Follow the instructions below to generate a **Bearer token**.
 
-### How to use the interactive public API documentation?
+Once you are authenticated, you can **Try it out** on any endpoint by providing your Bearer token and the required parameters.
 
-In order to use swagger, you need to be authenticated. See instructions below to do a proper authentication and retrieving a **"bearer token"**.
+### Authenticate and retrieve a Bearer token (email and password)
 
-Once you are authenticated, you can "try out" all available endpoints by inputting the **"bearer token"** and all required arguments.
+This approach is for users who signed up with an email and password (not via Google Sign In).  
+If you signed up with **Create with Google**, use the Google Sign In approach in the next section instead:  
+[How to authenticate with the public API and retrieve a bearer token? (Google Sign In Approach)](how-to-use-the-public-api.mdx#how-to-authenticate-with-the-public-api-and-retrieve-a-bearer-token-google-sign-in-approach)
 
+1. Open the [API documentation](https://api.keywordinsights.ai/apidocs/), scroll to the bottom of the page, and locate the **Authentication** section.
 
+![Authentication section in Keyword Insights Swagger public API](/images/image.png)
 
-### How to authenticate with the public API and retrieve a bearer token? (Email and password approach)
+Alternatively, you can go directly to the authentication endpoint using this link:  
+[Authentication → /authentication/login](https://api.keywordinsights.ai/apidocs/#/Authentication/post_authentication_login_)
 
-This approach is for users who have signed up with email and password instead of Google Sign Up. If you have signed up via "Create with Google" please find instructions in the next section: [How to authenticate with the public API and retrieve a bearer token? (Google Sign In Approach)](how-to-use-the-public-api.mdx#how-to-authenticate-with-the-public-api-and-retrieve-a-bearer-token-google-sign-in-approach)
+You should now see the authentication request details, including a **Try it out** button.
 
-1. When you first open the [API documentation](https://api.keywordinsights.ai/apidocs/), scroll to the bottom of the page and locate "Authentication".
+<img
+  src="/images/image (2).png"
+  alt="Click the Try it out button to get started using the Keyword Insights public API"
+/>
 
-![<p>Authentication Section in Keyword Insights - Swagger-Public API</p>](/images/image.png)
+2. After clicking **Try it out**, the request body field becomes editable.
+   1. Enter your valid email address and password, exactly as you would on `app.keywordinsights.ai`.
+   2. Click the large blue **Execute** button below the text field.
 
-Alternatively, you can click [this link](https://api.keywordinsights.ai/apidocs/#/Authentication/post_authentication_login_) to get taken directly to the authentication section.
+<img
+  src="/images/image (3).png"
+  alt="Enter email and password, then click Execute"
+/>
 
-You should see a screen similar to this, on which you need to click the "Try it out" button.
+If your email and password are correct, you should see a **200** response code and a JSON response object containing a `result` object.
 
-<img src="/images/image (2).png" alt="<p>Click the "Try it out" Button to get started using the Public Keyword Insights API</p>" />
+3. In the response, copy the value of the `access_token`.  
+   In the example below, the token starts with `eyJ0....` and ends with `...Mokg`. You will need this token in the next step.
 
-2. Next, the text field below becomes editable.
-   1. Enter your valid email address and password, just like you would on the website app.keywordinsights.ai. 
-   2. Click the large blue "Execute" button below the text field.
+<img
+  src="/images/image (5).png"
+  alt="Viewing the access token upon a successful authentication request"
+/>
 
-<img src="/images/image (3).png" alt="<p>Enter email and password, click execute</p>" />
-
-If your email and password are correct, you should see a response with a code = 200 and a JSON response object called "result". 
-
-3. From here, copy the value of the "access\_token". In the example below, the copied value starts with "eyJ0...." and ends with "...Mokg".
-   You will need this "token" for the next step.
-
-<img src="/images/image (5).png" alt="<p>Viewing the access token upon successful authentication request.</p>" />
-
-4. In a text-editor of your choice, paste the copied access token and write the word "Bearer" (with a capital B) in front of the access token, separated with a space.  So your complete string should look like this:
+4. In a text editor of your choice, paste the copied access token and prepend the word `Bearer` (with a capital **B**), separated by a single space.  
+   Your complete string should look similar to:
 
 ```
 Bearer eyJ0e..rest_of_the_token...4AnRMokg
 ```
 
-This token is needed to make requests to any endpoint. Some endpoints require additional arguments like "order\_id" which you will need to grab from the application. Typically, you can find these IDs in the URL of the respective endpoint. 
+This full string (including the word `Bearer`) is what you will use as the **Authorization** header for any authenticated API request.  
+Some endpoints also require additional arguments such as `order_id`, which you can usually find in the URL of the respective page in the application.
 
-5. Validate your Bearer Token. Please go to the section [Validate your Bearer Token](how-to-use-the-public-api.mdx#validate-your-bearer-token) to check if you have followed the steps above correctly.
+5. Validate your Bearer token using the steps in the section  
+[Validate your Bearer Token](how-to-use-the-public-api.mdx#validate-your-bearer-token).
 
-### How to authenticate with the public API and retrieve a bearer token? (Google Sign In Approach)
+### Authenticate and retrieve a Bearer token (Google Sign In)
 
-This approach is for users who have signed up via "Create with Google" instead of typing an email and password into the form during sign up.
+Use this approach if you signed up using **Create with Google** instead of creating a password during sign up.
 
-If you have signed up "manually" with an email and password, please find instructions in the previous section: [How to authenticate with the public API and retrieve a bearer token? (Email and password approach)](how-to-use-the-public-api.mdx#how-to-authenticate-with-the-public-api-and-retrieve-a-bearer-token-email-and-password-approach)
+If you signed up manually with an email and password, use the previous section instead:  
+[How to authenticate with the public API and retrieve a bearer token? (Email and password approach)](how-to-use-the-public-api.mdx#how-to-authenticate-with-the-public-api-and-retrieve-a-bearer-token-email-and-password-approach)
 
-1.  In your browser of choice (we use Chrome in this example), open a new tab, and open the "Network" tab in the developer tools.
+1. In your browser of choice (Chrome in this example), open a new tab and open the **Network** tab in the developer tools.
 
+<img
+  src="/images/image (9).png"
+  alt="Opening the developer tools in Google Chrome"
+/>
 
-    <img src="/images/image (9).png" alt="<p>Finding the Developer Tools in the Google Chrome browser</p>" />
+<img
+  src="/images/image (10).png"
+  alt="Opening the Network tab in the Chrome developer tools"
+/>
 
-    <img src="/images/image (10).png" alt="<p>Opening the "Network Traffic" tab inside the developer tools</p>" />
-2.  In the URL bar, type [app.keywordinsights.ai](https://app.keywordinsights.ai/), press enter and before logging in, click the clear button in the Network traffic tab.
+2. In the address bar, navigate to [https://app.keywordinsights.ai](https://app.keywordinsights.ai/).  
+   Before logging in, click the **clear** button in the Network tab so that you can easily see only the upcoming requests.
 
+<img
+  src="/images/image (11).png"
+  alt="Clearing the Network tab to more easily inspect the next requests"
+/>
 
-    <img src="/images/image (11).png" alt="<p>Clearing the Network tab to see results of the next step more clearly</p>" />
-3. Click "LOG IN WITH GOOGLE" and follow the prompts in the pop-up window as you normally would when signing in the application.
-4.  Once you are logged in, back in the Network tab, scroll up/down until you find a successful request. (We are choosing the /user request, but any other request will also do)
-    Select the request, make sure the "Headers" section on the right-hand panel is selected, and scroll down until you find the "Authorization" section.
-    From here, grab the "Bearer Token". **Make sure to copy the entire String, including the word "Bearer".**
+3. Click **LOG IN WITH GOOGLE** and follow the prompts in the pop-up window as you normally would when signing in to the application.
 
-    <img src="/images/image (12).png" alt="<p>Copy the bearer token from a successful request</p>" />
-5. Validate your bearer token. Please go to the section: [Validate your Bearer Token](how-to-use-the-public-api.mdx#validate-your-bearer-token) to make sure you copied it correctly. 
+4. After you are logged in, go back to the Network tab and locate a successful request (for example, the `/user` request – but any authenticated request will work).
+   - Select the request.
+   - In the right-hand panel, make sure the **Headers** tab is selected.
+   - Scroll down until you find the **Authorization** header.
+   - Copy the entire value of the Authorization header, including the word `Bearer`.
 
+<img
+  src="/images/image (12).png"
+  alt="Copying the Bearer token from an authenticated request in the Network tab"
+/>
+
+5. Validate your Bearer token using the steps in  
+[Validate your Bearer Token](how-to-use-the-public-api.mdx#validate-your-bearer-token).
 
 ### Validate your Bearer Token
 
-To easily validate if your **"Bearer Token"** is valid, scroll up to the "User" endpoint and try it out.
+To confirm that your **Bearer token** works correctly, you can call the **User** endpoint in Swagger.
 
-1. Click  "Try it out" to make the text field editable.
-2. Copy and paste the bearer token from the step above into the text field
-3.  Click the large, blue "Execute" button
-     
+1. In the Swagger UI, navigate to the **User** endpoint and click **Try it out** to make the input fields editable.
+2. Paste the full Bearer token string (including the word `Bearer`) into the appropriate field.
+3. Click the large blue **Execute** button.
 
-    <img src="/images/image (6).png" alt="" />
+<img
+  src="/images/image (6).png"
+  alt="Entering the Bearer token to validate it via the User endpoint"
+/>
 
-    <img src="/images/image (7).png" alt="" />
-4.  If the bearer token was created correctly, you should see a response with a 200 response code and your user object.
+<img
+  src="/images/image (7).png"
+  alt="Executing the request to validate the Bearer token"
+/>
 
+4. If the Bearer token is valid, you should see a **200** response code and your user object in the response body.
 
-    <img src="/images/image (8).png" alt="" />
+<img
+  src="/images/image (8).png"
+  alt="Successful response when validating the Bearer token"
+/>
 
-**Congratulations, you have successfully authenticated with our public API. All endpoints that are documented in the documentation can now be tried out.**
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+**Congratulations! You have successfully authenticated with our public API. You can now call any endpoint documented in the API reference.**
 
 <details>
+  <summary>How much is the API and how is it calculated?</summary>
 
-<summary>How much is the API and how does it calculated?</summary>
-
-The API is available for Professional and Premium subscriptions. For clustering, We have a calculation endpoint [here](https://dev.api.keywordinsights.ai/apidocs/#/) that will tell you how many credits are needed based on your settings. The API itself has no additional pricing. 
+  The API is available for **Professional** and **Premium** subscriptions.  
+  For clustering, we provide a calculation endpoint at  
+  [https://dev.api.keywordinsights.ai/apidocs](https://dev.api.keywordinsights.ai/apidocs/#/)  
+  that tells you how many credits are required based on your settings.  
+  The API itself has **no additional pricing** beyond your subscription and credit usage.
 
 </details>
+
 
