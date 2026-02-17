@@ -1,0 +1,247 @@
+---
+title: "Public API: Content Brief"
+description: "Generate AI-powered content briefs, retrieve SERP analysis, and create outlines via the API"
+---
+
+Generate comprehensive content briefs with SERP-based headings, AI title/description suggestions, and word count benchmarks — all programmatically.
+
+<Info>
+  Full endpoint reference available on [Swagger](https://api.keywordinsights.ai/apidocs/#/Content%20Brief).
+</Info>
+
+### Quick Start
+
+Create a content brief for a target keyword:
+
+```python
+import os
+import requests
+
+API_KEY = os.environ["KWI_API_KEY"]
+BASE_URL = "https://api.keywordinsights.ai"
+HEADERS = {"X-API-Key": API_KEY}
+
+payload = {
+    "keyword": "content marketing strategies",
+    "language": "en",
+    "location": "United States",
+}
+
+response = requests.post(
+    f"{BASE_URL}/api/content-brief/order/",
+    headers=HEADERS,
+    json=payload,
+)
+
+data = response.json()
+print(data)
+# {"status": true, "payload": {"id": "339ca10b-...", "status": true, "cost": 500}}
+```
+
+### Endpoints
+
+| Method | Path | Description |
+| --- | --- | --- |
+| POST | `/api/content-brief/order/` | Create a content brief |
+| GET | `/api/content-brief/order/?id={id}` | Get brief results |
+| DELETE | `/api/content-brief/order/?ids={id1}&ids={id2}` | Delete briefs |
+| GET | `/api/content-brief/orders/?page=1&page_size=10` | List all briefs (paginated) |
+| GET | `/api/content-brief/languages/` | Supported languages |
+| POST | `/api/content-brief/order/{order_id}/outline/` | Generate AI outline |
+| GET | `/api/content-brief/order/{order_id}/outline/?auto_generate_order_id={id}` | Get AI outline results |
+
+### Parameters
+
+#### Create Brief — Required
+
+| Parameter | Type | Description |
+| --- | --- | --- |
+| `keyword` | string | Target keyword or topic |
+| `language` | string | Language code (e.g. `en`). See `/api/content-brief/languages/` |
+| `location` | string | Location name (e.g. `United States`). See `/api/keywords-insights/locations/` |
+
+#### Create Brief — Optional
+
+| Parameter | Type | Description |
+| --- | --- | --- |
+| `folder_id` | string | Dashboard folder ID to save the project into |
+
+### Retrieving Results
+
+Content briefs process asynchronously. Poll the results endpoint until the data is ready:
+
+```python
+import os
+import time
+import requests
+
+API_KEY = os.environ["KWI_API_KEY"]
+BASE_URL = "https://api.keywordinsights.ai"
+HEADERS = {"X-API-Key": API_KEY}
+
+order_id = "339ca10b-80c1-4248-b8d0-c11377c204c7"
+
+while True:
+    response = requests.get(
+        f"{BASE_URL}/api/content-brief/order/",
+        headers=HEADERS,
+        params={"id": order_id},
+    )
+
+    data = response.json()["result"]["payload"]
+
+    if data["status"]:
+        break
+
+    print("Processing...")
+    time.sleep(15)
+
+# Brief is ready
+print(f"Keyword: {data['keyword']}")
+print(f"Avg word count: {data['word_count_avg']}")
+print(f"Recommended: {data['word_count_min']}–{data['word_count_max']} words")
+print(f"Pages analyzed: {data['pages_count']}")
+print(f"Headings found: {data['headings_count']}")
+```
+
+The results include:
+
+| Field | Description |
+| --- | --- |
+| `raw` | SERP page structures with headings, bullet points, and content weights |
+| `brief_title_suggests` | AI-generated meta title suggestions |
+| `brief_description_suggests` | AI-generated meta description suggestions |
+| `word_count_avg` | Average word count across top-ranking pages |
+| `word_count_min` / `word_count_max` | Recommended word count range |
+| `pages_count` | Number of SERP pages analyzed |
+| `headings_count` | Total headings scraped from top results |
+| `processing_status` | Status of each processing stage |
+
+### Generating an AI Outline
+
+After a content brief is complete, you can generate an AI-powered outline:
+
+```python
+# Step 1: Trigger outline generation
+response = requests.post(
+    f"{BASE_URL}/api/content-brief/order/{order_id}/outline/",
+    headers=HEADERS,
+    json={"additional_context": "Focus on B2B companies"},  # optional
+)
+
+auto_id = response.json()["result"]["payload"]["auto_generate_order_id"]
+
+# Step 2: Poll until outline is ready
+while True:
+    response = requests.get(
+        f"{BASE_URL}/api/content-brief/order/{order_id}/outline/",
+        headers=HEADERS,
+        params={"auto_generate_order_id": auto_id},
+    )
+
+    data = response.json()["result"]["payload"]
+
+    if data["status"]:
+        break
+
+    time.sleep(10)
+
+print(data["string"])  # Full outline as text
+```
+
+### Listing Briefs
+
+Retrieve a paginated list of all your content briefs:
+
+```python
+response = requests.get(
+    f"{BASE_URL}/api/content-brief/orders/",
+    headers=HEADERS,
+    params={"page": 1, "page_size": 20},
+)
+
+data = response.json()["result"]["payload"]
+print(f"Total briefs: {data['total_orders']}")
+
+for brief in data["orders"]:
+    print(f"  {brief['keyword']} — {brief['status']}")
+```
+
+### Complete Example
+
+End-to-end: create a content brief, wait for results, then generate an AI outline.
+
+```python
+import os
+import time
+import requests
+
+API_KEY = os.environ["KWI_API_KEY"]
+BASE_URL = "https://api.keywordinsights.ai"
+HEADERS = {"X-API-Key": API_KEY}
+
+
+def create_brief(keyword, language="en", location="United States"):
+    """Create a content brief order."""
+    response = requests.post(
+        f"{BASE_URL}/api/content-brief/order/",
+        headers=HEADERS,
+        json={"keyword": keyword, "language": language, "location": location},
+    )
+    response.raise_for_status()
+    return response.json()["result"]["payload"]
+
+
+def wait_for_brief(order_id):
+    """Poll until the content brief is ready."""
+    while True:
+        response = requests.get(
+            f"{BASE_URL}/api/content-brief/order/",
+            headers=HEADERS,
+            params={"id": order_id},
+        )
+        data = response.json()["result"]["payload"]
+
+        if data["status"]:
+            return data
+
+        print("Brief processing...")
+        time.sleep(15)
+
+
+def generate_outline(order_id, context=""):
+    """Trigger AI outline generation and wait for results."""
+    response = requests.post(
+        f"{BASE_URL}/api/content-brief/order/{order_id}/outline/",
+        headers=HEADERS,
+        json={"additional_context": context},
+    )
+    auto_id = response.json()["result"]["payload"]["auto_generate_order_id"]
+
+    while True:
+        response = requests.get(
+            f"{BASE_URL}/api/content-brief/order/{order_id}/outline/",
+            headers=HEADERS,
+            params={"auto_generate_order_id": auto_id},
+        )
+        data = response.json()["result"]["payload"]
+
+        if data["status"]:
+            return data
+
+        time.sleep(10)
+
+
+# --- Run ---
+
+result = create_brief("best project management tools")
+order_id = result["id"]
+print(f"Brief created: {order_id} (cost: {result['cost']} credits)")
+
+brief = wait_for_brief(order_id)
+print(f"Target: {brief['word_count_min']}–{brief['word_count_max']} words")
+print(f"Title suggestions: {brief['brief_title_suggests']}")
+
+outline = generate_outline(order_id, context="Focus on remote teams")
+print(f"\nAI Outline:\n{outline['string']}")
+```

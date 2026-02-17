@@ -173,11 +173,17 @@
         "group": "API",
         "pages": [
           "api/how-to-use-the-public-api",
+          "api/api-key-authentication",
           {
             "group": "API Use Cases",
             "pages": [
               "api/api-use-cases/README",
               "api/api-use-cases/public-api-clustering",
+              "api/api-use-cases/public-api-content-brief",
+              "api/api-use-cases/public-api-keyword-discovery",
+              "api/api-use-cases/public-api-writer-agent",
+              "api/api-use-cases/public-api-advanced-ranking",
+              "api/api-use-cases/public-api-keyword-content",
               "api/api-use-cases/n8n-integration"
             ]
           }

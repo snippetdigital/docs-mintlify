@@ -1,0 +1,233 @@
+---
+title: "Public API: Keyword Discovery"
+description: "Generate keyword research from a seed keyword and retrieve enriched keyword data via the API"
+---
+
+Discover new keyword opportunities from a seed keyword — including autocomplete suggestions, related searches, People Also Ask, and search volume metrics.
+
+<Info>
+  Full endpoint reference available on [Swagger](https://api.keywordinsights.ai/apidocs/#/Keyword%20Discovery).
+</Info>
+
+### Quick Start
+
+Create a keyword discovery order from a seed keyword:
+
+```python
+import os
+import requests
+
+API_KEY = os.environ["KWI_API_KEY"]
+BASE_URL = "https://api.keywordinsights.ai"
+HEADERS = {"X-API-Key": API_KEY}
+
+payload = {
+    "seed_keyword": "content marketing strategies",
+    "language": "en",
+    "location": "United States",
+}
+
+response = requests.post(
+    f"{BASE_URL}/api/keyword-discovery/order/",
+    headers=HEADERS,
+    json=payload,
+)
+
+data = response.json()
+print(data)
+# {"status": true, "payload": {"id": "339ca10b-...", "status": "created", ...}}
+```
+
+### Endpoints
+
+| Method | Path | Description |
+| --- | --- | --- |
+| POST | `/api/keyword-discovery/order/` | Create a keyword discovery order |
+| GET | `/api/keyword-discovery/order/{order_id}/keywords` | Get discovered keywords (paginated, filterable) |
+
+### Parameters
+
+#### Create Order — Required
+
+| Parameter | Type | Description |
+| --- | --- | --- |
+| `seed_keyword` | string | The main keyword to discover related keywords for |
+| `language` | string | ISO 639-1 language code (e.g. `en`) |
+| `location` | string | Location name (e.g. `United States`). See `/api/keywords-insights/locations/` |
+
+#### Create Order — Optional
+
+| Parameter | Type | Description |
+| --- | --- | --- |
+| `folder_id` | string | Dashboard folder ID to organize the order. Also pulls workspace/domain settings if the folder is linked to a domain |
+
+### Retrieving Keywords
+
+Once the order is processing (or complete), retrieve discovered keywords with filtering and sorting:
+
+```python
+import os
+import requests
+
+API_KEY = os.environ["KWI_API_KEY"]
+BASE_URL = "https://api.keywordinsights.ai"
+HEADERS = {"X-API-Key": API_KEY}
+
+order_id = "339ca10b-80c1-4248-b8d0-c11377c204c7"
+
+response = requests.get(
+    f"{BASE_URL}/api/keyword-discovery/order/{order_id}/keywords",
+    headers=HEADERS,
+    params={
+        "page_size": 50,
+        "page_number": 1,
+        "sort_by": "volume",
+        "sort_order": "desc",
+    },
+)
+
+data = response.json()["result"]["payload"]
+print(f"Total keywords: {data['total_list_length']}")
+
+for kw in data["list"]:
+    print(f"  {kw['keyword']} — vol: {kw['volume']}, source: {kw['source']}")
+```
+
+#### Keywords Query Parameters
+
+**Pagination & sorting:**
+
+| Parameter | Type | Default | Description |
+| --- | --- | --- | --- |
+| `page_size` | integer | 50 | Results per page |
+| `page_number` | integer | 1 | Page number |
+| `sort_by` | string | `volume` | Sort field: `keyword`, `source`, `volume`, `cpc`, `competition` |
+| `sort_order` | string | `desc` | `asc` or `desc` |
+
+**Source filtering:**
+
+| Parameter | Type | Description |
+| --- | --- | --- |
+| `source` | string | Filter by single source |
+| `sources` | string[] | Filter by multiple sources (pass as repeated query params) |
+
+Available sources: `seed_keyword`, `google_autocomplete`, `google_related_searches`, `people_also_ask`, `quora`, `reddit`, `google_search_console`, `generated_keywords`
+
+**Keyword filtering:**
+
+| Parameter | Type | Description |
+| --- | --- | --- |
+| `keywords_included` | string[] | Only include keywords containing these terms |
+| `keywords_excluded` | string[] | Exclude keywords containing these terms |
+| `include_hidden` | boolean | Include hidden keywords (default `false`) |
+
+**Metric filters:**
+
+| Parameter | Type | Description |
+| --- | --- | --- |
+| `volume_from` / `volume_to` | integer | Search volume range |
+| `cpc_from` / `cpc_to` | float | CPC range |
+| `competition_from` / `competition_to` | float | Competition value range |
+| `competition_cat` | string | Competition category: `all`, `low`, `medium`, `high` |
+| `ctr_from` / `ctr_to` | float | CTR range (GSC data) |
+| `clicks_from` / `clicks_to` | integer | Clicks range (GSC data) |
+| `position_from` / `position_to` | float | SERP position range (GSC data) |
+| `impressions_from` / `impressions_to` | integer | Impressions range (GSC data) |
+
+### Customizations
+
+#### Filtering by Source
+
+Narrow results to specific keyword sources:
+
+```python
+# Only autocomplete and People Also Ask keywords
+response = requests.get(
+    f"{BASE_URL}/api/keyword-discovery/order/{order_id}/keywords",
+    headers=HEADERS,
+    params={
+        "sources": ["google_autocomplete", "people_also_ask"],
+        "sort_by": "volume",
+        "sort_order": "desc",
+    },
+)
+```
+
+#### Filtering by Metrics
+
+Find high-volume, low-competition keywords:
+
+```python
+response = requests.get(
+    f"{BASE_URL}/api/keyword-discovery/order/{order_id}/keywords",
+    headers=HEADERS,
+    params={
+        "volume_from": 1000,
+        "competition_cat": "low",
+        "sort_by": "volume",
+        "sort_order": "desc",
+    },
+)
+```
+
+### Complete Example
+
+Create a keyword discovery order and retrieve the top keywords by volume:
+
+```python
+import os
+import time
+import requests
+
+API_KEY = os.environ["KWI_API_KEY"]
+BASE_URL = "https://api.keywordinsights.ai"
+HEADERS = {"X-API-Key": API_KEY}
+
+
+def create_discovery(seed_keyword, language="en", location="United States"):
+    """Create a keyword discovery order."""
+    response = requests.post(
+        f"{BASE_URL}/api/keyword-discovery/order/",
+        headers=HEADERS,
+        json={
+            "seed_keyword": seed_keyword,
+            "language": language,
+            "location": location,
+        },
+    )
+    response.raise_for_status()
+    return response.json()["result"]["payload"]
+
+
+def get_keywords(order_id, page_size=50, min_volume=0):
+    """Fetch discovered keywords with optional volume filter."""
+    response = requests.get(
+        f"{BASE_URL}/api/keyword-discovery/order/{order_id}/keywords",
+        headers=HEADERS,
+        params={
+            "page_size": page_size,
+            "page_number": 1,
+            "sort_by": "volume",
+            "sort_order": "desc",
+            "volume_from": min_volume,
+        },
+    )
+    response.raise_for_status()
+    return response.json()["result"]["payload"]
+
+
+# --- Run ---
+
+result = create_discovery("project management software")
+order_id = result["id"]
+print(f"Order created: {order_id}")
+
+# Wait for keywords to be enriched
+time.sleep(60)
+
+data = get_keywords(order_id, page_size=20, min_volume=500)
+print(f"\nTop {len(data['list'])} keywords (of {data['total_list_length']} total):\n")
+
+for kw in data["list"]:
+    print(f"  {kw['keyword']:50s} vol: {kw['volume']:>6}  source: {kw['source']}")
+```

@@ -1,0 +1,242 @@
+---
+title: "Public API: Keyword Content"
+description: "Extract People Also Ask, Reddit/Quora questions, and AI-generated meta titles and descriptions via the API"
+---
+
+Extract content research data for any keyword — People Also Ask questions, Reddit and Quora discussions, and AI-generated meta titles and descriptions.
+
+<Info>
+  Full endpoint reference available on [Swagger](https://api.keywordinsights.ai/apidocs/#/Keyword%20Content).
+</Info>
+
+### Quick Start
+
+Create a keyword content order to extract People Also Ask questions:
+
+```python
+import os
+import requests
+
+API_KEY = os.environ["KWI_API_KEY"]
+BASE_URL = "https://api.keywordinsights.ai"
+HEADERS = {"X-API-Key": API_KEY}
+
+payload = {
+    "keyword": "best project management tools",
+    "language": "en",
+    "location": "United States",
+    "content_insights": ["paa"],
+}
+
+response = requests.post(
+    f"{BASE_URL}/api/keyword-content/order/",
+    headers=HEADERS,
+    json=payload,
+)
+
+data = response.json()
+print(data)
+# {"status": true, "order_id": "2879fa0b-...", "cost": 50}
+```
+
+### Endpoints
+
+| Method | Path | Description |
+| --- | --- | --- |
+| POST | `/api/keyword-content/order/` | Create a keyword content order |
+| GET | `/api/keyword-content/order/?order_id={id}` | Get order status and results |
+
+### Parameters
+
+#### Required
+
+| Parameter | Type | Description |
+| --- | --- | --- |
+| `keyword` | string | Target keyword to research |
+| `language` | string | Language code (e.g. `en`). See `/api/content-brief/languages/` |
+| `location` | string | Location name (e.g. `United States`). See `/api/keywords-insights/locations/` |
+| `content_insights` | string[] | Types of content insights to extract (see below) |
+
+#### Optional
+
+| Parameter | Type | Default | Description |
+| --- | --- | --- | --- |
+| `device` | string | `desktop` | `desktop` or `mobile` |
+
+### Content Insight Types
+
+The `content_insights` array controls which data is extracted. You can combine multiple types in a single order:
+
+| Insight | Description | Cost |
+| --- | --- | --- |
+| `paa` | People Also Ask questions from Google SERP | 50 credits |
+| `reddit_questions` | Related Reddit discussions and questions | 50 credits |
+| `quora_questions` | Related Quora questions | 50 credits |
+| `meta_titles` | AI-generated meta title suggestions | 200 credits |
+| `meta_descriptions` | AI-generated meta description suggestions | 200 credits |
+
+Total cost = sum of selected insights.
+
+### Customizations
+
+#### All Content Insights
+
+Extract everything in a single order:
+
+```python
+payload = {
+    "keyword": "email marketing automation",
+    "language": "en",
+    "location": "United States",
+    "content_insights": [
+        "paa",
+        "reddit_questions",
+        "quora_questions",
+        "meta_titles",
+        "meta_descriptions",
+    ],
+}
+# Cost: 50 + 50 + 50 + 200 + 200 = 550 credits
+```
+
+#### Questions Only
+
+Get user questions from multiple platforms at a lower cost:
+
+```python
+payload = {
+    "keyword": "best CRM software",
+    "language": "en",
+    "location": "United States",
+    "content_insights": ["paa", "reddit_questions", "quora_questions"],
+}
+# Cost: 50 + 50 + 50 = 150 credits
+```
+
+### Retrieving Results
+
+Poll until the order status is `"done"`:
+
+```python
+import os
+import time
+import requests
+
+API_KEY = os.environ["KWI_API_KEY"]
+BASE_URL = "https://api.keywordinsights.ai"
+HEADERS = {"X-API-Key": API_KEY}
+
+order_id = "2879fa0b-deae-4aab-ad87-fd8fb8db9717"
+
+while True:
+    response = requests.get(
+        f"{BASE_URL}/api/keyword-content/order/",
+        headers=HEADERS,
+        params={"order_id": order_id},
+    )
+
+    data = response.json()["result"]["payload"]
+
+    if data["status"] == "done":
+        break
+
+    print("Processing...")
+    time.sleep(10)
+
+results = data["results"]
+
+# People Also Ask
+if "paa" in results:
+    print("People Also Ask:")
+    for q in results["paa"]:
+        print(f"  - {q}")
+
+# Reddit questions
+if "reddit_questions" in results:
+    print("\nReddit questions:")
+    for q in results["reddit_questions"]:
+        print(f"  - {q}")
+
+# AI meta titles
+if "meta_titles" in results:
+    print("\nSuggested meta titles:")
+    for title in results["meta_titles"]:
+        print(f"  - {title}")
+```
+
+The results include download links for CSV exports:
+
+```python
+# Download CSV files
+files = results.get("files", {}).get("csv", {})
+for insight_type, download_url in files.items():
+    print(f"{insight_type}: {download_url}")
+```
+
+### Complete Example
+
+Extract People Also Ask and Reddit questions, then save results to a file:
+
+```python
+import os
+import time
+import json
+import requests
+
+API_KEY = os.environ["KWI_API_KEY"]
+BASE_URL = "https://api.keywordinsights.ai"
+HEADERS = {"X-API-Key": API_KEY}
+
+
+def create_content_order(keyword, insights, language="en", location="United States"):
+    """Create a keyword content order."""
+    response = requests.post(
+        f"{BASE_URL}/api/keyword-content/order/",
+        headers=HEADERS,
+        json={
+            "keyword": keyword,
+            "language": language,
+            "location": location,
+            "content_insights": insights,
+        },
+    )
+    response.raise_for_status()
+    return response.json()
+
+
+def wait_for_results(order_id):
+    """Poll until results are ready."""
+    while True:
+        response = requests.get(
+            f"{BASE_URL}/api/keyword-content/order/",
+            headers=HEADERS,
+            params={"order_id": order_id},
+        )
+        data = response.json()["result"]["payload"]
+
+        if data["status"] == "done":
+            return data["results"]
+
+        print("Processing...")
+        time.sleep(10)
+
+
+# --- Run ---
+
+result = create_content_order(
+    keyword="best project management tools",
+    insights=["paa", "reddit_questions"],
+)
+order_id = result["order_id"]
+print(f"Order created: {order_id} (cost: {result['cost']} credits)")
+
+results = wait_for_results(order_id)
+
+# Save to file
+with open("content_research.json", "w") as f:
+    json.dump(results, f, indent=2)
+
+paa_count = len(results.get("paa", []))
+reddit_count = len(results.get("reddit_questions", []))
+print(f"Saved {paa_count} PAA questions and {reddit_count} Reddit questions")
+```

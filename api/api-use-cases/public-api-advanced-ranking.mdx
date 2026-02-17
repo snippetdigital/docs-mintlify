@@ -1,0 +1,252 @@
+---
+title: "Public API: Advanced Ranking"
+description: "Analyze SERP rankings for your domain with top URLs, word counts, and related searches via the API"
+---
+
+Analyze how a domain ranks for any keyword — get top SERP URLs, domain positions, word counts, and related searches.
+
+<Info>
+  Full endpoint reference available on [Swagger](https://api.keywordinsights.ai/apidocs/#/Keyword%20Ranking).
+</Info>
+
+### Quick Start
+
+Check how a domain ranks for a single keyword:
+
+```python
+import os
+import requests
+
+API_KEY = os.environ["KWI_API_KEY"]
+BASE_URL = "https://api.keywordinsights.ai"
+HEADERS = {"X-API-Key": API_KEY}
+
+payload = {
+    "keyword": "project management software",
+    "domain": "asana.com",
+    "language": "en",
+    "location": "United States",
+}
+
+response = requests.post(
+    f"{BASE_URL}/api/advanced-ranking/order/",
+    headers=HEADERS,
+    json=payload,
+)
+
+data = response.json()
+print(data)
+# {"status": true, "order_id": "2879fa0b-...", "cost": 1}
+```
+
+### Endpoints
+
+| Method | Path | Description |
+| --- | --- | --- |
+| POST | `/api/advanced-ranking/order/` | Single keyword ranking analysis |
+| GET | `/api/advanced-ranking/order/?order_id={id}` | Get single keyword results |
+| POST | `/api/advanced-ranking/batch/order/` | Batch keyword ranking analysis |
+| GET | `/api/advanced-ranking/batch/order/?order_id={id}` | Get batch results |
+
+### Parameters
+
+#### Single Keyword — Required
+
+| Parameter | Type | Description |
+| --- | --- | --- |
+| `keyword` | string | Target keyword to analyze |
+| `domain` | string | Domain to track rankings for (e.g. `asana.com`) |
+| `language` | string | Language code (e.g. `en`). See `/api/keywords-insights/languages/` |
+| `location` | string | Location name (e.g. `United States`). See `/api/keywords-insights/locations/` |
+
+#### Single Keyword — Optional
+
+| Parameter | Type | Default | Description |
+| --- | --- | --- | --- |
+| `device` | string | `desktop` | `desktop` or `mobile` |
+| `include_word_count` | boolean | `false` | Include word count for top ranking pages. Costs 10 credits instead of 1 |
+
+#### Batch — Required
+
+| Parameter | Type | Description |
+| --- | --- | --- |
+| `keywords` | string[] | Array of keywords to analyze |
+| `domain` | string | Domain to track rankings for |
+| `language` | string | Language code |
+| `location` | string | Location name |
+
+#### Batch — Optional
+
+Same as single keyword: `device`, `include_word_count`.
+
+### Cost
+
+| Mode | Without word count | With word count |
+| --- | --- | --- |
+| Single keyword | 1 credit | 10 credits |
+| Batch | 1 credit per keyword | 10 credits per keyword |
+
+### Customizations
+
+#### Including Word Count
+
+Enable `include_word_count` to get word counts for the top 10 ranking URLs. Useful for benchmarking content length:
+
+```python
+payload = {
+    "keyword": "best CRM software",
+    "domain": "hubspot.com",
+    "language": "en",
+    "location": "United States",
+    "include_word_count": True,  # 10 credits instead of 1
+}
+```
+
+#### Batch Ranking
+
+Analyze multiple keywords at once:
+
+```python
+payload = {
+    "keywords": [
+        "project management software",
+        "best project management tools",
+        "project management for teams",
+    ],
+    "domain": "asana.com",
+    "language": "en",
+    "location": "United States",
+}
+
+response = requests.post(
+    f"{BASE_URL}/api/advanced-ranking/batch/order/",
+    headers=HEADERS,
+    json=payload,
+)
+
+data = response.json()
+print(f"Batch order: {data['order_id']} (cost: {data['cost']} credits)")
+```
+
+### Retrieving Results
+
+Poll until the order status is `"done"`:
+
+```python
+import os
+import time
+import requests
+
+API_KEY = os.environ["KWI_API_KEY"]
+BASE_URL = "https://api.keywordinsights.ai"
+HEADERS = {"X-API-Key": API_KEY}
+
+order_id = "2879fa0b-deae-4aab-ad87-fd8fb8db9717"
+
+while True:
+    response = requests.get(
+        f"{BASE_URL}/api/advanced-ranking/order/",
+        headers=HEADERS,
+        params={"order_id": order_id},
+    )
+
+    data = response.json()["result"]["payload"]
+
+    if data["status"] == "done":
+        break
+
+    print("Processing...")
+    time.sleep(10)
+
+results = data["results"]
+print(f"Domain URLs in top 100: {results['n_domain_rankings']}")
+
+for ranking in results["domain_rankings"]:
+    print(f"  #{ranking['rank']} — {ranking['url']}")
+
+print(f"\nTop 10 SERP results:")
+for url_data in results["top_rankings"]:
+    wc = f" ({url_data['word_count']} words)" if url_data.get("word_count") else ""
+    print(f"  {url_data['url']}{wc}")
+
+print(f"\nRelated searches: {results['related_searches']}")
+print(f"People Also Ask: {results['related_questions']}")
+```
+
+The results include:
+
+| Field | Description |
+| --- | --- |
+| `domain_rankings` | List of your domain's URLs that rank in the top 100, with their positions |
+| `n_domain_rankings` | Total number of your domain's URLs in the top 100 |
+| `top_rankings` | Top 10 SERP URLs (with optional word counts) |
+| `related_searches` | Related searches from the SERP |
+| `related_questions` | People Also Ask questions from the SERP |
+
+### Complete Example
+
+Analyze a domain's rankings for multiple keywords and summarize the results:
+
+```python
+import os
+import time
+import requests
+
+API_KEY = os.environ["KWI_API_KEY"]
+BASE_URL = "https://api.keywordinsights.ai"
+HEADERS = {"X-API-Key": API_KEY}
+
+
+def create_batch(keywords, domain, language="en", location="United States"):
+    """Create a batch ranking order."""
+    response = requests.post(
+        f"{BASE_URL}/api/advanced-ranking/batch/order/",
+        headers=HEADERS,
+        json={
+            "keywords": keywords,
+            "domain": domain,
+            "language": language,
+            "location": location,
+            "include_word_count": True,
+        },
+    )
+    response.raise_for_status()
+    return response.json()
+
+
+def wait_for_batch(order_id):
+    """Poll until batch is complete."""
+    while True:
+        response = requests.get(
+            f"{BASE_URL}/api/advanced-ranking/batch/order/",
+            headers=HEADERS,
+            params={"order_id": order_id},
+        )
+        data = response.json()["result"]["payload"]
+
+        if data["status"] == "done":
+            return data["results"]
+
+        print("Processing...")
+        time.sleep(15)
+
+
+# --- Run ---
+
+keywords = [
+    "project management software",
+    "task management tool",
+    "team collaboration software",
+]
+
+result = create_batch(keywords, domain="asana.com")
+order_id = result["order_id"]
+print(f"Batch created: {order_id} (cost: {result['cost']} credits)")
+
+results = wait_for_batch(order_id)
+
+for item in results:
+    print(f"\n'{item['keyword']}': {item['n_domain_rankings']} URLs in top 100")
+    for r in item["domain_rankings"][:3]:
+        print(f"  #{r['rank']} — {r['url']}")
+```

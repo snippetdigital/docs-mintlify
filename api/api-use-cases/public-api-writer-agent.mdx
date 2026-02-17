@@ -1,0 +1,225 @@
+---
+title: "Public API: Writer Agent"
+description: "Generate AI-powered articles with outlines, plans, and full content via the API"
+---
+
+Generate full AI-written articles from a keyword — including research, outline, and polished content.
+
+<Info>
+  Full endpoint reference available on [Swagger](https://api.keywordinsights.ai/apidocs/#/Writer%20Agent).
+</Info>
+
+### Quick Start
+
+Create a writer agent order to generate an article:
+
+```python
+import os
+import requests
+
+API_KEY = os.environ["KWI_API_KEY"]
+BASE_URL = "https://api.keywordinsights.ai"
+HEADERS = {"X-API-Key": API_KEY}
+
+payload = {
+    "keyword": "content marketing strategies",
+    "language_code": "en",
+    "location_name": "United States",
+}
+
+response = requests.post(
+    f"{BASE_URL}/api/writer-agent/order/",
+    headers=HEADERS,
+    json=payload,
+)
+
+data = response.json()
+print(data)
+# {"status": true, "payload": {"id": "550e8400-...", "keyword": "content marketing strategies", ...}}
+```
+
+### Endpoints
+
+| Method | Path | Description |
+| --- | --- | --- |
+| POST | `/api/writer-agent/order/` | Create a writer agent order |
+| GET | `/api/writer-agent/order/?id={id}` | Get order status and generated article |
+| GET | `/api/writer-agent/options/` | Get available options (POV, content types, tones) |
+
+### Parameters
+
+#### Required
+
+| Parameter | Type | Description |
+| --- | --- | --- |
+| `keyword` | string | The main keyword or topic for the article |
+| `language_code` | string | ISO 639-1 language code (e.g. `en`) |
+| `location_name` | string | Location name (e.g. `United States`). See `/api/keywords-insights/locations/` |
+
+#### Optional
+
+| Parameter | Type | Default | Description |
+| --- | --- | --- | --- |
+| `point_of_view` | string | `First person (I/We)` | `First person (I/We)`, `Second Person (You)`, `Third Person (He/She/They/It)` |
+| `content_type` | string | `article` | `article` or `landing_page` |
+| `additional_insights` | string | — | Extra context or instructions for the AI (e.g. "Focus on B2B companies") |
+| `folder_id` | string | — | Dashboard folder ID to organize the order |
+
+### Customizations
+
+#### Point of View
+
+Control the writing perspective:
+
+```python
+payload = {
+    "keyword": "best CRM software",
+    "language_code": "en",
+    "location_name": "United States",
+    "point_of_view": "Second Person (You)",  # Speaks directly to the reader
+}
+```
+
+#### Content Type
+
+Choose between article-style content or landing page copy:
+
+```python
+payload = {
+    "keyword": "project management tool",
+    "language_code": "en",
+    "location_name": "United States",
+    "content_type": "landing_page",
+}
+```
+
+#### Additional Context
+
+Steer the AI with specific instructions:
+
+```python
+payload = {
+    "keyword": "email marketing tips",
+    "language_code": "en",
+    "location_name": "United States",
+    "additional_insights": "Focus on e-commerce businesses. Include real-world case studies.",
+}
+```
+
+### Getting Available Options
+
+Retrieve all available options before creating an order:
+
+```python
+response = requests.get(
+    f"{BASE_URL}/api/writer-agent/options/",
+    headers=HEADERS,
+)
+
+options = response.json()["result"]["payload"]
+print("Points of view:", options["points_of_view"])
+print("Content types:", options["content_types"])
+print("Tones of voice:", [t["name"] for t in options["tones_of_voice"]])
+```
+
+### Retrieving Results
+
+Writer agent orders process through multiple stages (outline, plan, article). Poll until the article is generated:
+
+```python
+import os
+import time
+import requests
+
+API_KEY = os.environ["KWI_API_KEY"]
+BASE_URL = "https://api.keywordinsights.ai"
+HEADERS = {"X-API-Key": API_KEY}
+
+order_id = "550e8400-e29b-41d4-a716-446655440000"
+
+while True:
+    response = requests.get(
+        f"{BASE_URL}/api/writer-agent/order/",
+        headers=HEADERS,
+        params={"id": order_id},
+    )
+
+    data = response.json()["result"]["payload"]
+    status = data.get("processing_status", {})
+    print(f"Status: {data.get('status', 'processing')}")
+
+    if data.get("generated_article"):
+        break
+
+    time.sleep(30)
+
+print(data["generated_article"])
+```
+
+### Complete Example
+
+End-to-end: create a writer agent order, wait for the article, and save it.
+
+```python
+import os
+import time
+import requests
+
+API_KEY = os.environ["KWI_API_KEY"]
+BASE_URL = "https://api.keywordinsights.ai"
+HEADERS = {"X-API-Key": API_KEY}
+
+
+def create_article(keyword, language="en", location="United States", **kwargs):
+    """Create a writer agent order."""
+    payload = {
+        "keyword": keyword,
+        "language_code": language,
+        "location_name": location,
+        **kwargs,
+    }
+    response = requests.post(
+        f"{BASE_URL}/api/writer-agent/order/",
+        headers=HEADERS,
+        json=payload,
+    )
+    response.raise_for_status()
+    return response.json()["result"]["payload"]
+
+
+def wait_for_article(order_id):
+    """Poll until the article is generated."""
+    while True:
+        response = requests.get(
+            f"{BASE_URL}/api/writer-agent/order/",
+            headers=HEADERS,
+            params={"id": order_id},
+        )
+        data = response.json()["result"]["payload"]
+
+        if data.get("generated_article"):
+            return data
+
+        print(f"Processing... status: {data.get('status', 'unknown')}")
+        time.sleep(30)
+
+
+# --- Run ---
+
+result = create_article(
+    keyword="best project management tools for startups",
+    point_of_view="Second Person (You)",
+    content_type="article",
+    additional_insights="Include comparisons and pricing information",
+)
+order_id = result["id"]
+print(f"Order created: {order_id}")
+
+article = wait_for_article(order_id)
+
+# Save the article
+with open("article.md", "w") as f:
+    f.write(article["generated_article"])
+
+print(f"Article saved ({len(article['generated_article'])} characters)")
+```

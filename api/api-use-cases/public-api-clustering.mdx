@@ -1,196 +1,313 @@
 ---
 title: "Public API: Clustering"
+description: "Create keyword clustering orders, check status, and retrieve results via the API"
 ---
 
-On this page, you'll find examples on how to use the Keyword Insights Public API for clustering projects.
+Cluster keywords by SERP similarity, detect search intent, and track rankings — all programmatically.
 
-## Clustering Parameters
+<Info>
+  Full endpoint reference available on [Swagger](https://api.keywordinsights.ai/apidocs/#/Keyword%20Insights).
+</Info>
 
-`project_name*`: Name of the project for easier identification in the keywordinsights.ai UI.
+### Quick Start
 
-`keywords*`: List of keywords. \["keyword 1", "keyword 2", "keyword 3"]
+Create a clustering order with the minimum required parameters:
 
-`search_volumes*`: List of search volumes. \[213, 1561, 616] Or any data really doesn't matter, as that is always provided by the user
-
-`language*`: Language code to use for SERP results scraping.
-
-`location*`: Location name to use for SERP results scraping.
-
-`insights*`: The types of insights to perform within the order (**cluster required**).
-
-For a full clustering order, you need to define:
-
-```
-"insights": [
-    "cluster",
-    "rank",
-    "context"
-  ],
-```
-
-While for intent-only orders, you only pass context:
-
-```
-"insights": [
-    "context"
-  ],
-```
-
-
-
-**clustering\_method**: The method to be used for grouping the keywords into clusters.
-
-**grouping\_accuracy**: Parameter used with clustering method "volume". Describes minimum number of SERP URLs
-in common between every keyword in cluster and cluster lead keyword.
-
-**hub\_creation\_method**: Describes the level of similarity of keywords within the cluster for the HUB algorithm.
-
-**device**: The device for the SERP scraping.
-
-**mobile\_type**: The type of mobile device. Applied if device=mobile.
-
-**tablet\_type**: The type of tablet device. Applied if device=tablet.
-
-**url**: The url for ranking. Required if "rank" is specified within the "insights" property.
-
-## Clustering: Intent Only
-
-**POST /api/keywords-insights/order/**
-
-In order to create a clustering order for intent only, you have to specify all clustering parameters, exactly as for a full clustering order.
-
-### Intent Only: Example Payload
-
-The difference to a full clustering order is the contents of the insights array inside the payload. You only need to pass "context" vs "context", "rank" and "cluster".
-
-
-A full example of an intent only order below:
-
-```
-{
-  "clustering_method": "volume",
-  "device": "desktop",
-  "grouping_accuracy": 4,
-  "hub_creation_method": "medium",
-  "insights": [
-    "context"
-  ],
-  "keywords": [
-    "tesla",
-    "tesla s",
-    "tesla 3",
-    "tesla x"
-  ],
-  "language": "en",
-  "location": "United States",
-  "mobile_type": "android",
-  "project_name": "project_name",
-  "search_volumes": [
-    213,
-    1561,
-    616,
-    777
-  ],
-  "tablet_type": "android",
-  "url": "https://tesla.com/"
-}
-```
-
-### Intent Only: Code Example Python
-
-```
+```python
 import os
-from urllib.parse import urljoin
-
 import requests
 
-# See https://docs.keywordinsights.ai/api/public-api-documentation#how-to-authenticate-with-the-public-api-and-retrieve-a-bearer-token-email-and-password-approach
-JWT_TOKEN = os.environ.get("JWT_TOKEN")
-BASE_API = "https://api.keywordinsights.ai"
-
-keywords = ["what was used before freon", "clean air act refrigerant regulations", "dielektrol capacitor"]
+API_KEY = os.environ["KWI_API_KEY"]
+BASE_URL = "https://api.keywordinsights.ai"
+HEADERS = {"X-API-Key": API_KEY}
 
 payload = {
-    "clustering_method": "volume",
-    "device": "desktop",
-    "grouping_accuracy": 4,
-    "hub_creation_method": "medium",
-    "insights": ["context"],
-    "keywords": keywords,
+    "project_name": "My first cluster",
+    "keywords": ["keyword clustering", "keyword grouping", "cluster keywords"],
+    "search_volumes": [2300, 1200, 900],
     "language": "en",
     "location": "United States",
-    "project_name": "Intent only project",
-    "search_volumes": len(keywords) * [0],
+    "insights": ["cluster", "context"],
 }
 
 response = requests.post(
-    urljoin(BASE_API, "/api/keywords-insights/order/"),
-    headers={"Authorization": f"Bearer {JWT_TOKEN}"},
+    f"{BASE_URL}/api/keywords-insights/order/",
+    headers=HEADERS,
     json=payload,
 )
 
-print(response.json())  # Order will show in the dashboard under "Intent only project"
+data = response.json()
+print(data)
+# {"status": true, "order_id": "2879fa0b-...", "cost": 150}
 ```
 
+### Endpoints
 
+| Method | Path | Description |
+| --- | --- | --- |
+| POST | `/api/keywords-insights/order/` | Create a clustering order |
+| GET | `/api/keywords-insights/order/?order_id={id}` | Check order status |
+| GET | `/api/keywords-insights/order/json/{order_id}/` | Get results as JSON (paginated) |
+| GET | `/api/keywords-insights/order/xlsx/{order_id}/` | Export results as XLSX |
+| GET | `/api/keywords-insights/orders/?n_orders={n}` | List recent orders |
+| GET | `/api/keywords-insights/order/cost/?n_keywords={n}&insights=cluster` | Estimate cost |
+| GET | `/api/keywords-insights/languages/` | Supported languages |
+| GET | `/api/keywords-insights/locations/` | Supported locations |
 
-## Retrieving Clustering results in XLSX: Code example python
+### Parameters
 
-**GET /api/keywords-insights/order/xlsx/{order_id}/**
+#### Required
 
+| Parameter | Type | Description |
+| --- | --- | --- |
+| `project_name` | string | Name shown in the dashboard |
+| `keywords` | string[] | List of keywords to cluster (min 5, max 200,000) |
+| `search_volumes` | number[] | Search volume per keyword (same length as `keywords`) |
+| `language` | string | Language code (e.g. `en`). See `/api/keywords-insights/languages/` |
+| `location` | string | Location name (e.g. `United States`). See `/api/keywords-insights/locations/` |
+| `insights` | string[] | Insight types: `cluster`, `context`, `rank`, `title_ai` |
+
+#### Optional
+
+| Parameter | Type | Default | Description |
+| --- | --- | --- | --- |
+| `clustering_method` | string | `volume` | `volume` or `agglomerative` |
+| `grouping_accuracy` | integer | `4` | SERP overlap threshold (1–7). Higher = stricter clusters |
+| `hub_creation_method` | string | `medium` | Topical cluster similarity: `soft`, `medium`, `hard` |
+| `device` | string | `desktop` | SERP device: `desktop`, `mobile`, `tablet` |
+| `mobile_type` | string | — | `iphone` or `android` (when `device` is `mobile`) |
+| `tablet_type` | string | — | `ipad` or `android` (when `device` is `tablet`) |
+| `url` | string | — | Domain URL for ranking. **Required** when `rank` is in `insights` |
+| `folder_id` | string | — | Dashboard folder ID to save the project into |
+
+### Insight Types
+
+The `insights` array controls what analysis runs:
+
+- **`cluster`** — Groups keywords by SERP similarity. **Required** for all clustering orders.
+- **`context`** — Detects search intent (informational, commercial, transactional, navigational).
+- **`rank`** — Tracks your domain's ranking for each keyword. Requires the `url` parameter.
+- **`title_ai`** — Generates AI-suggested page titles for each cluster.
+
+**Full clustering order:**
+```json
+"insights": ["cluster", "rank", "context"]
 ```
+
+**Intent-only order** (no clustering, just intent classification):
+```json
+"insights": ["context"]
+```
+
+### Customizations
+
+#### Clustering Method
+
+- **`volume`** (default) — Groups keywords based on shared SERP URLs. Controlled by `grouping_accuracy` (1 = loose, 7 = strict). Best for most use cases.
+- **`agglomerative`** — Uses hierarchical clustering for larger keyword sets. Better for discovering broader topic relationships.
+
+#### Topical Clusters
+
+The `hub_creation_method` controls how tightly related keywords must be to form a topical cluster:
+
+- **`soft`** — Broad grouping, more keywords per topical cluster
+- **`medium`** — Balanced (recommended)
+- **`hard`** — Strict grouping, fewer but more focused clusters
+
+### Checking Order Status
+
+Orders process asynchronously. Poll the status endpoint until `status` is `"done"`:
+
+```python
 import os
-from urllib.parse import urljoin
-
 import requests
 
-# See https://docs.keywordinsights.ai/api/public-api-documentation#how-to-authenticate-with-the-public-api-and-retrieve-a-bearer-token-email-and-password-approach
-JWT_TOKEN = os.environ.get("JWT_TOKEN")
-BASE_API = "https://api.keywordinsights.ai"
+API_KEY = os.environ["KWI_API_KEY"]
+BASE_URL = "https://api.keywordinsights.ai"
+HEADERS = {"X-API-Key": API_KEY}
 
+order_id = "2879fa0b-deae-4aab-ad87-fd8fb8db9717"
 
 response = requests.get(
-    urljoin(BASE_API, "/api/keywords-insights/order/xlsx/10ea9e67-4d45-4e77-9032-d85a29660225/"),
-    headers={"Authorization": f"Bearer {JWT_TOKEN}"},
+    f"{BASE_URL}/api/keywords-insights/order/",
+    headers=HEADERS,
+    params={"order_id": order_id},
 )
 
-print(response.json()) # will print link to file download: blob:https://api.keywordinsights.ai/a7bdcfa7-b67e-44de-8602-d51d5d260fb5
+data = response.json()
+print(data["status"])    # "confirmed", "processing", or "done"
+print(data["progress"])  # 0.0 to 1.0
 ```
 
-| Parameter                      | Description               |
-| ------------------------------ | ------------------------- |
-| Authorization \*string(header) | Bearer token              |
-| order\_id \*string(path)       | ID of the order to export |
+When the order is complete, the response includes download links:
 
-## Retrieving Clustering results in JSON: Code example python
-
-**GET ​/api​/keywords-insights​/order​/json​/{order_id}​/**
-
+```json
+{
+  "status": "done",
+  "progress": 1.0,
+  "order_id": "2879fa0b-...",
+  "results_files": {
+    "xlsx": "https://api.keywordinsights.ai/api/keywords-insights/order/xlsx/2879fa0b-.../",
+    "google_sheets": "https://docs.google.com/spreadsheets/d/.../copy"
+  }
+}
 ```
+
+### Retrieving Results as JSON
+
+Get paginated cluster data:
+
+```python
 import os
-from urllib.parse import urljoin
-
 import requests
 
-# See https://docs.keywordinsights.ai/api/public-api-documentation#how-to-authenticate-with-the-public-api-and-retrieve-a-bearer-token-email-and-password-approach
-JWT_TOKEN = os.environ.get("JWT_TOKEN")
-BASE_API = "https://api.keywordinsights.ai"
+API_KEY = os.environ["KWI_API_KEY"]
+BASE_URL = "https://api.keywordinsights.ai"
+HEADERS = {"X-API-Key": API_KEY}
 
+order_id = "2879fa0b-deae-4aab-ad87-fd8fb8db9717"
 
 response = requests.get(
-    urljoin(BASE_API, "/api/keywords-insights/order/json/10ea9e67-4d45-4e77-9032-d85a29660225/?page_size=50&page_number=1&sort_by=search_volume&ascending=false"),
-    headers={"Authorization": f"Bearer {JWT_TOKEN}"},
+    f"{BASE_URL}/api/keywords-insights/order/json/{order_id}/",
+    headers=HEADERS,
+    params={
+        "page_size": 50,
+        "page_number": 1,
+        "sort_by": "search_volume",
+        "ascending": False,
+    },
 )
 
-print(response.json()) # will print a json output of the first 50 clusters in the given project 
+data = response.json()
+clusters = data["result"]["payload"]["clusters"]
+
+for cluster in clusters:
+    print(f"{cluster['name']} — {cluster['number_of_keywords']} keywords, vol: {cluster['search_volume']}")
 ```
 
-| Parameter Name                 | Description                                                                                              |
-| ------------------------------ | -------------------------------------------------------------------------------------------------------- |
-| Authorization \*string(header) | Bearer token                                                                                             |
-| order\_id \*string(path)       | Order UUID (returned when the order was created)                                                         |
-| page\_sizeinteger(query)       | <p>Number of rows per page (max 1000)</p><p><em>Default value</em> : 50</p>                              |
-| page\_numberinteger(query)     | <p>Page number starting from 1</p><p><em>Default value</em> : 1</p>                                      |
-| sort\_bystring(query)          | <p>Sort field (e.g. search_volume, keyword, cluster_id)</p><p><em>Default value</em> : search_volume</p> |
-| ascendingboolean(query)        | <p>Sort direction. false = descending</p><p><em>Default value</em> : false</p><p>--truefalse</p>         |
-| filter\_idstring(query)        | Filter ID. Can be obtained from the filters endpoint.                                                    |
+**JSON results query parameters:**
+
+| Parameter | Type | Default | Description |
+| --- | --- | --- | --- |
+| `page_size` | integer | 50 | Results per page (max 1,000) |
+| `page_number` | integer | 1 | Page number |
+| `sort_by` | string | `search_volume` | Sort field (e.g. `search_volume`, `keyword`, `cluster_id`) |
+| `ascending` | boolean | `false` | Sort direction |
+| `filter_id` | string | — | Filter ID from the filters endpoint |
+
+### Exporting as XLSX
+
+Download results as an Excel file:
+
+```python
+import os
+import requests
+
+API_KEY = os.environ["KWI_API_KEY"]
+BASE_URL = "https://api.keywordinsights.ai"
+HEADERS = {"X-API-Key": API_KEY}
+
+order_id = "2879fa0b-deae-4aab-ad87-fd8fb8db9717"
+
+response = requests.get(
+    f"{BASE_URL}/api/keywords-insights/order/xlsx/{order_id}/",
+    headers=HEADERS,
+)
+
+# Save the XLSX file
+with open("clusters.xlsx", "wb") as f:
+    f.write(response.content)
+```
+
+### Estimating Cost
+
+Check how many credits an order will cost before creating it:
+
+```python
+response = requests.get(
+    f"{BASE_URL}/api/keywords-insights/order/cost/",
+    headers=HEADERS,
+    params={"n_keywords": 500, "insights": ["cluster", "context"]},
+)
+
+print(response.json())  # {"cost": 250}
+```
+
+### Complete Example
+
+End-to-end workflow: create an order, wait for completion, and download results.
+
+```python
+import os
+import time
+import requests
+
+API_KEY = os.environ["KWI_API_KEY"]
+BASE_URL = "https://api.keywordinsights.ai"
+HEADERS = {"X-API-Key": API_KEY}
+
+
+def create_order(keywords, volumes):
+    """Create a clustering order."""
+    response = requests.post(
+        f"{BASE_URL}/api/keywords-insights/order/",
+        headers=HEADERS,
+        json={
+            "project_name": "API automation example",
+            "keywords": keywords,
+            "search_volumes": volumes,
+            "language": "en",
+            "location": "United States",
+            "insights": ["cluster", "context"],
+            "clustering_method": "volume",
+            "grouping_accuracy": 4,
+            "hub_creation_method": "medium",
+        },
+    )
+    response.raise_for_status()
+    return response.json()
+
+
+def wait_for_completion(order_id):
+    """Poll until the order is done."""
+    while True:
+        response = requests.get(
+            f"{BASE_URL}/api/keywords-insights/order/",
+            headers=HEADERS,
+            params={"order_id": order_id},
+        )
+        data = response.json()
+        print(f"Status: {data['status']} ({data['progress']:.0%})")
+
+        if data["status"] == "done":
+            return data
+
+        time.sleep(30)
+
+
+def get_results(order_id):
+    """Fetch all clusters as JSON."""
+    response = requests.get(
+        f"{BASE_URL}/api/keywords-insights/order/json/{order_id}/",
+        headers=HEADERS,
+        params={"page_size": 100, "page_number": 1},
+    )
+    response.raise_for_status()
+    return response.json()
+
+
+# --- Run ---
+
+keywords = ["best running shoes", "running shoes review", "top sneakers for running"]
+volumes = [12000, 8500, 3200]
+
+result = create_order(keywords, volumes)
+order_id = result["order_id"]
+print(f"Order created: {order_id} (cost: {result['cost']} credits)")
+
+wait_for_completion(order_id)
+
+data = get_results(order_id)
+for cluster in data["result"]["payload"]["clusters"]:
+    print(f"  {cluster['name']} — {cluster['number_of_keywords']} kw, vol: {cluster['search_volume']}")
+```
