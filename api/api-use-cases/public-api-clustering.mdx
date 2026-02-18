@@ -13,7 +13,8 @@ Cluster keywords by SERP similarity, detect search intent, and track rankings �
 
 Create a clustering order with the minimum required parameters:
 
-```python
+<CodeGroup>
+```python Python
 import os
 import requests
 
@@ -28,6 +29,7 @@ payload = {
     "language": "en",
     "location": "United States",
     "insights": ["cluster", "context"],
+    "folder_id": "<your_folder_id>",
 }
 
 response = requests.post(
@@ -40,6 +42,39 @@ data = response.json()
 print(data)
 # {"status": true, "order_id": "2879fa0b-...", "cost": 150}
 ```
+
+```javascript JavaScript
+const API_KEY = process.env.KWI_API_KEY;
+const BASE_URL = "https://api.keywordinsights.ai";
+const HEADERS = {
+  "X-API-Key": API_KEY,
+  "Content-Type": "application/json",
+};
+
+const payload = {
+  project_name: "My first cluster",
+  keywords: ["keyword clustering", "keyword grouping", "cluster keywords"],
+  search_volumes: [2300, 1200, 900],
+  language: "en",
+  location: "United States",
+  insights: ["cluster", "context"],
+  folder_id: "<your_folder_id>",
+};
+
+async function createOrder() {
+  const response = await fetch(`${BASE_URL}/api/keywords-insights/order/`, {
+    method: "POST",
+    headers: HEADERS,
+    body: JSON.stringify(payload),
+  });
+
+  const data = await response.json();
+  console.log(data);
+}
+
+createOrder();
+```
+</CodeGroup>
 
 ### Endpoints
 
@@ -65,7 +100,8 @@ print(data)
 | `search_volumes` | number[] | Search volume per keyword (same length as `keywords`) |
 | `language` | string | Language code (e.g. `en`). See `/api/keywords-insights/languages/` |
 | `location` | string | Location name (e.g. `United States`). See `/api/keywords-insights/locations/` |
-| `insights` | string[] | Insight types: `cluster`, `context`, `rank`, `title_ai` |
+| `insights` | string[] | Insight types: `cluster`, `context`, `rank` |
+| `folder_id` | string | Dashboard folder ID to save the project into. Retrieve from the browser URL in the KWI dashboard |
 
 #### Optional
 
@@ -78,7 +114,6 @@ print(data)
 | `mobile_type` | string | — | `iphone` or `android` (when `device` is `mobile`) |
 | `tablet_type` | string | — | `ipad` or `android` (when `device` is `tablet`) |
 | `url` | string | — | Domain URL for ranking. **Required** when `rank` is in `insights` |
-| `folder_id` | string | — | Dashboard folder ID to save the project into |
 
 ### Insight Types
 
@@ -87,7 +122,6 @@ The `insights` array controls what analysis runs:
 - **`cluster`** — Groups keywords by SERP similarity. **Required** for all clustering orders.
 - **`context`** — Detects search intent (informational, commercial, transactional, navigational).
 - **`rank`** — Tracks your domain's ranking for each keyword. Requires the `url` parameter.
-- **`title_ai`** — Generates AI-suggested page titles for each cluster.
 
 **Full clustering order:**
 ```json
@@ -118,7 +152,8 @@ The `hub_creation_method` controls how tightly related keywords must be to form 
 
 Orders process asynchronously. Poll the status endpoint until `status` is `"done"`:
 
-```python
+<CodeGroup>
+```python Python
 import os
 import requests
 
@@ -139,6 +174,28 @@ print(data["status"])    # "confirmed", "processing", or "done"
 print(data["progress"])  # 0.0 to 1.0
 ```
 
+```javascript JavaScript
+const API_KEY = process.env.KWI_API_KEY;
+const BASE_URL = "https://api.keywordinsights.ai";
+const HEADERS = { "X-API-Key": API_KEY };
+
+const orderId = "2879fa0b-deae-4aab-ad87-fd8fb8db9717";
+
+async function checkStatus() {
+  const url = new URL(`${BASE_URL}/api/keywords-insights/order/`);
+  url.searchParams.append("order_id", orderId);
+
+  const response = await fetch(url, { headers: HEADERS });
+  const data = await response.json();
+
+  console.log(data.status);   // "confirmed", "processing", or "done"
+  console.log(data.progress); // 0.0 to 1.0
+}
+
+checkStatus();
+```
+</CodeGroup>
+
 When the order is complete, the response includes download links:
 
 ```json
@@ -157,7 +214,8 @@ When the order is complete, the response includes download links:
 
 Get paginated cluster data:
 
-```python
+<CodeGroup>
+```python Python
 import os
 import requests
 
@@ -185,6 +243,35 @@ for cluster in clusters:
     print(f"{cluster['name']} — {cluster['number_of_keywords']} keywords, vol: {cluster['search_volume']}")
 ```
 
+```javascript JavaScript
+const API_KEY = process.env.KWI_API_KEY;
+const BASE_URL = "https://api.keywordinsights.ai";
+const HEADERS = { "X-API-Key": API_KEY };
+
+const orderId = "2879fa0b-deae-4aab-ad87-fd8fb8db9717";
+
+async function getResults() {
+  const url = new URL(`${BASE_URL}/api/keywords-insights/order/json/${orderId}/`);
+  url.searchParams.append("page_size", "50");
+  url.searchParams.append("page_number", "1");
+  url.searchParams.append("sort_by", "search_volume");
+  url.searchParams.append("ascending", "false");
+
+  const response = await fetch(url, { headers: HEADERS });
+  const data = await response.json();
+  const clusters = data.result.payload.clusters;
+
+  clusters.forEach((cluster) => {
+    console.log(
+      `${cluster.name} — ${cluster.number_of_keywords} keywords, vol: ${cluster.search_volume}`
+    );
+  });
+}
+
+getResults();
+```
+</CodeGroup>
+
 **JSON results query parameters:**
 
 | Parameter | Type | Default | Description |
@@ -199,7 +286,8 @@ for cluster in clusters:
 
 Download results as an Excel file:
 
-```python
+<CodeGroup>
+```python Python
 import os
 import requests
 
@@ -219,25 +307,73 @@ with open("clusters.xlsx", "wb") as f:
     f.write(response.content)
 ```
 
+```javascript JavaScript
+const fs = require("fs");
+const API_KEY = process.env.KWI_API_KEY;
+const BASE_URL = "https://api.keywordinsights.ai";
+const HEADERS = { "X-API-Key": API_KEY };
+
+const orderId = "2879fa0b-deae-4aab-ad87-fd8fb8db9717";
+
+async function downloadXlsx() {
+  const response = await fetch(`${BASE_URL}/api/keywords-insights/order/xlsx/${orderId}/`, {
+    headers: HEADERS,
+  });
+
+  const buffer = await response.arrayBuffer();
+  fs.writeFileSync("clusters.xlsx", Buffer.from(buffer));
+}
+
+downloadXlsx();
+```
+</CodeGroup>
+
 ### Estimating Cost
 
 Check how many credits an order will cost before creating it:
 
-```python
+<CodeGroup>
+```python Python
 response = requests.get(
     f"{BASE_URL}/api/keywords-insights/order/cost/",
     headers=HEADERS,
     params={"n_keywords": 500, "insights": ["cluster", "context"]},
 )
 
-print(response.json())  # {"cost": 250}
+print(response.json())  # {"cost": 1000}
 ```
+
+```javascript JavaScript
+async function estimateCost() {
+  const url = new URL(`${BASE_URL}/api/keywords-insights/order/cost/`);
+  url.searchParams.append("n_keywords", "500");
+  url.searchParams.append("insights", "cluster");
+  url.searchParams.append("insights", "context");
+
+  const response = await fetch(url, { headers: HEADERS });
+  const data = await response.json();
+  console.log(data); // { cost: 1000 }
+}
+
+estimateCost();
+```
+</CodeGroup>
+
+**Cost per keyword by insight combination:**
+
+| Insights | Cost per keyword |
+| --- | --- |
+| `cluster` only | 1 credit |
+| `cluster` + `context` | 2 credits |
+| `cluster` + `rank` | 2 credits |
+| `cluster` + `context` + `rank` | 3 credits |
 
 ### Complete Example
 
 End-to-end workflow: create an order, wait for completion, and download results.
 
-```python
+<CodeGroup>
+```python Python
 import os
 import time
 import requests
@@ -259,6 +395,7 @@ def create_order(keywords, volumes):
             "language": "en",
             "location": "United States",
             "insights": ["cluster", "context"],
+            "folder_id": "<your_folder_id>",
             "clustering_method": "volume",
             "grouping_accuracy": 4,
             "hub_creation_method": "medium",
@@ -311,3 +448,78 @@ data = get_results(order_id)
 for cluster in data["result"]["payload"]["clusters"]:
     print(f"  {cluster['name']} — {cluster['number_of_keywords']} kw, vol: {cluster['search_volume']}")
 ```
+
+```javascript JavaScript
+const API_KEY = process.env.KWI_API_KEY;
+const BASE_URL = "https://api.keywordinsights.ai";
+const HEADERS = { "X-API-Key": API_KEY };
+
+async function createOrder(keywords, volumes) {
+  const response = await fetch(`${BASE_URL}/api/keywords-insights/order/`, {
+    method: "POST",
+    headers: { ...HEADERS, "Content-Type": "application/json" },
+    body: JSON.stringify({
+      project_name: "API automation example",
+      keywords,
+      search_volumes: volumes,
+      language: "en",
+      location: "United States",
+      insights: ["cluster", "context"],
+      folder_id: "<your_folder_id>",
+      clustering_method: "volume",
+      grouping_accuracy: 4,
+      hub_creation_method: "medium",
+    }),
+  });
+
+  if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+  return await response.json();
+}
+
+async function waitForCompletion(orderId) {
+  while (true) {
+    const url = new URL(`${BASE_URL}/api/keywords-insights/order/`);
+    url.searchParams.append("order_id", orderId);
+
+    const response = await fetch(url, { headers: HEADERS });
+    const data = await response.json();
+
+    console.log(`Status: ${data.status} (${(data.progress * 100).toFixed(0)}%)`);
+
+    if (data.status === "done") return data;
+
+    await new Promise((r) => setTimeout(r, 30000));
+  }
+}
+
+async function getResults(orderId) {
+  const url = new URL(`${BASE_URL}/api/keywords-insights/order/json/${orderId}/`);
+  url.searchParams.append("page_size", "100");
+  url.searchParams.append("page_number", "1");
+
+  const response = await fetch(url, { headers: HEADERS });
+  if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+  return await response.json();
+}
+
+async function run() {
+  const keywords = ["best running shoes", "running shoes review", "top sneakers for running"];
+  const volumes = [12000, 8500, 3200];
+
+  const result = await createOrder(keywords, volumes);
+  const orderId = result.order_id;
+  console.log(`Order created: ${orderId} (cost: ${result.cost} credits)`);
+
+  await waitForCompletion(orderId);
+
+  const data = await getResults(orderId);
+  data.result.payload.clusters.forEach((cluster) => {
+    console.log(
+      `  ${cluster.name} — ${cluster.number_of_keywords} kw, vol: ${cluster.search_volume}`
+    );
+  });
+}
+
+run();
+```
+</CodeGroup>

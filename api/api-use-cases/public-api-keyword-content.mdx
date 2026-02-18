@@ -13,7 +13,8 @@ Extract content research data for any keyword — People Also Ask questions, Red
 
 Create a keyword content order to extract People Also Ask questions:
 
-```python
+<CodeGroup>
+```python Python
 import os
 import requests
 
@@ -38,6 +39,37 @@ data = response.json()
 print(data)
 # {"status": true, "order_id": "2879fa0b-...", "cost": 50}
 ```
+
+```javascript JavaScript
+const API_KEY = process.env.KWI_API_KEY;
+const BASE_URL = "https://api.keywordinsights.ai";
+const HEADERS = {
+  "X-API-Key": API_KEY,
+  "Content-Type": "application/json"
+};
+
+const payload = {
+  keyword: "best project management tools",
+  language: "en",
+  location: "United States",
+  content_insights: ["paa"],
+};
+
+async function createOrder() {
+  const response = await fetch(`${BASE_URL}/api/keyword-content/order/`, {
+    method: "POST",
+    headers: HEADERS,
+    body: JSON.stringify(payload),
+  });
+
+  const data = await response.json();
+  console.log(data);
+  // {"status": true, "order_id": "2879fa0b-...", "cost": 50}
+}
+
+createOrder();
+```
+</CodeGroup>
 
 ### Endpoints
 
@@ -83,7 +115,8 @@ Total cost = sum of selected insights.
 
 Extract everything in a single order:
 
-```python
+<CodeGroup>
+```python Python
 payload = {
     "keyword": "email marketing automation",
     "language": "en",
@@ -99,11 +132,29 @@ payload = {
 # Cost: 50 + 50 + 50 + 200 + 200 = 550 credits
 ```
 
+```javascript JavaScript
+const payload = {
+  keyword: "email marketing automation",
+  language: "en",
+  location: "United States",
+  content_insights: [
+    "paa",
+    "reddit_questions",
+    "quora_questions",
+    "meta_titles",
+    "meta_descriptions",
+  ],
+};
+// Cost: 50 + 50 + 50 + 200 + 200 = 550 credits
+```
+</CodeGroup>
+
 #### Questions Only
 
 Get user questions from multiple platforms at a lower cost:
 
-```python
+<CodeGroup>
+```python Python
 payload = {
     "keyword": "best CRM software",
     "language": "en",
@@ -113,11 +164,23 @@ payload = {
 # Cost: 50 + 50 + 50 = 150 credits
 ```
 
+```javascript JavaScript
+const payload = {
+  keyword: "best CRM software",
+  language: "en",
+  location: "United States",
+  content_insights: ["paa", "reddit_questions", "quora_questions"],
+};
+// Cost: 50 + 50 + 50 = 150 credits
+```
+</CodeGroup>
+
 ### Retrieving Results
 
 Poll until the order status is `"done"`:
 
-```python
+<CodeGroup>
+```python Python
 import os
 import time
 import requests
@@ -164,20 +227,90 @@ if "meta_titles" in results:
         print(f"  - {title}")
 ```
 
+```javascript JavaScript
+const API_KEY = process.env.KWI_API_KEY;
+const BASE_URL = "https://api.keywordinsights.ai";
+const HEADERS = { "X-API-Key": API_KEY };
+
+const order_id = "2879fa0b-deae-4aab-ad87-fd8fb8db9717";
+
+async function getResults() {
+  let data;
+  while (true) {
+    const url = new URL(`${BASE_URL}/api/keyword-content/order/`);
+    url.searchParams.append("order_id", order_id);
+
+    const response = await fetch(url, {
+      headers: HEADERS,
+    });
+
+    const json = await response.json();
+    data = json.result.payload;
+
+    if (data.status === "done") {
+      break;
+    }
+
+    console.log("Processing...");
+    await new Promise((r) => setTimeout(r, 10000));
+  }
+
+  const results = data.results;
+
+  // People Also Ask
+  if (results.paa) {
+    console.log("People Also Ask:");
+    for (const q of results.paa) {
+      console.log(`  - ${q}`);
+    }
+  }
+
+  // Reddit questions
+  if (results.reddit_questions) {
+    console.log("\nReddit questions:");
+    for (const q of results.reddit_questions) {
+      console.log(`  - ${q}`);
+    }
+  }
+
+  // AI meta titles
+  if (results.meta_titles) {
+    console.log("\nSuggested meta titles:");
+    for (const title of results.meta_titles) {
+      console.log(`  - ${title}`);
+    }
+  }
+}
+
+getResults();
+```
+</CodeGroup>
+
 The results include download links for CSV exports:
 
-```python
+<CodeGroup>
+```python Python
 # Download CSV files
 files = results.get("files", {}).get("csv", {})
 for insight_type, download_url in files.items():
     print(f"{insight_type}: {download_url}")
 ```
 
+```javascript JavaScript
+// Download CSV files
+const files = results.files?.csv || {};
+for (const [insight_type, download_url] of Object.entries(files)) {
+  console.log(`${insight_type}: ${download_url}`);
+}
+```
+</CodeGroup>
+
 ### Complete Example
 
 Extract People Also Ask and Reddit questions, then save results to a file:
 
-```python
+<CodeGroup>
+```python Python
 import os
 import time
 import json
@@ -240,3 +373,76 @@ paa_count = len(results.get("paa", []))
 reddit_count = len(results.get("reddit_questions", []))
 print(f"Saved {paa_count} PAA questions and {reddit_count} Reddit questions")
 ```
+
+```javascript JavaScript
+const fs = require("fs");
+const API_KEY = process.env.KWI_API_KEY;
+const BASE_URL = "https://api.keywordinsights.ai";
+const HEADERS = {
+  "X-API-Key": API_KEY,
+  "Content-Type": "application/json"
+};
+
+async function createContentOrder(keyword, insights, language = "en", location = "United States") {
+  const response = await fetch(`${BASE_URL}/api/keyword-content/order/`, {
+    method: "POST",
+    headers: HEADERS,
+    body: JSON.stringify({
+      keyword,
+      language,
+      location,
+      content_insights: insights,
+    }),
+  });
+
+  if (!response.ok) {
+    throw new Error(`HTTP error! status: ${response.status}`);
+  }
+
+  return await response.json();
+}
+
+async function waitForResults(order_id) {
+  while (true) {
+    const url = new URL(`${BASE_URL}/api/keyword-content/order/`);
+    url.searchParams.append("order_id", order_id);
+
+    const response = await fetch(url, {
+      headers: HEADERS,
+    });
+
+    const json = await response.json();
+    const data = json.result.payload;
+
+    if (data.status === "done") {
+      return data.results;
+    }
+
+    console.log("Processing...");
+    await new Promise((r) => setTimeout(r, 10000));
+  }
+}
+
+// --- Run ---
+
+async function run() {
+  const result = await createContentOrder(
+    "best project management tools",
+    ["paa", "reddit_questions"]
+  );
+  const order_id = result.order_id;
+  console.log(`Order created: ${order_id} (cost: ${result.cost} credits)`);
+
+  const results = await waitForResults(order_id);
+
+  // Save to file
+  fs.writeFileSync("content_research.json", JSON.stringify(results, null, 2));
+
+  const paa_count = (results.paa || []).length;
+  const reddit_count = (results.reddit_questions || []).length;
+  console.log(`Saved ${paa_count} PAA questions and ${reddit_count} Reddit questions`);
+}
+
+run();
+```
+</CodeGroup>

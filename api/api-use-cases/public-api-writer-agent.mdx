@@ -13,7 +13,8 @@ Generate full AI-written articles from a keyword — including research, outline
 
 Create a writer agent order to generate an article:
 
-```python
+<CodeGroup>
+```python Python
 import os
 import requests
 
@@ -25,6 +26,7 @@ payload = {
     "keyword": "content marketing strategies",
     "language_code": "en",
     "location_name": "United States",
+    "folder_id": "<your_folder_id>",
 }
 
 response = requests.post(
@@ -37,6 +39,32 @@ data = response.json()
 print(data)
 # {"status": true, "payload": {"id": "550e8400-...", "keyword": "content marketing strategies", ...}}
 ```
+
+```javascript JavaScript
+const API_KEY = process.env.KWI_API_KEY;
+const BASE_URL = "https://api.keywordinsights.ai";
+
+const payload = {
+  keyword: "content marketing strategies",
+  language_code: "en",
+  location_name: "United States",
+  folder_id: "<your_folder_id>",
+};
+
+const response = await fetch(`${BASE_URL}/api/writer-agent/order/`, {
+  method: "POST",
+  headers: {
+    "X-API-Key": API_KEY,
+    "Content-Type": "application/json",
+  },
+  body: JSON.stringify(payload),
+});
+
+const data = await response.json();
+console.log(data);
+// {"status": true, "payload": {"id": "550e8400-...", "keyword": "content marketing strategies", ...}}
+```
+</CodeGroup>
 
 ### Endpoints
 
@@ -55,6 +83,7 @@ print(data)
 | `keyword` | string | The main keyword or topic for the article |
 | `language_code` | string | ISO 639-1 language code (e.g. `en`) |
 | `location_name` | string | Location name (e.g. `United States`). See `/api/keywords-insights/locations/` |
+| `folder_id` | string | Dashboard folder ID to organize the order. Retrieve from the browser URL in the KWI dashboard |
 
 #### Optional
 
@@ -63,7 +92,6 @@ print(data)
 | `point_of_view` | string | `First person (I/We)` | `First person (I/We)`, `Second Person (You)`, `Third Person (He/She/They/It)` |
 | `content_type` | string | `article` | `article` or `landing_page` |
 | `additional_insights` | string | — | Extra context or instructions for the AI (e.g. "Focus on B2B companies") |
-| `folder_id` | string | — | Dashboard folder ID to organize the order |
 
 ### Customizations
 
@@ -71,7 +99,8 @@ print(data)
 
 Control the writing perspective:
 
-```python
+<CodeGroup>
+```python Python
 payload = {
     "keyword": "best CRM software",
     "language_code": "en",
@@ -80,11 +109,22 @@ payload = {
 }
 ```
 
+```javascript JavaScript
+const payload = {
+  keyword: "best CRM software",
+  language_code: "en",
+  location_name: "United States",
+  point_of_view: "Second Person (You)", // Speaks directly to the reader
+};
+```
+</CodeGroup>
+
 #### Content Type
 
 Choose between article-style content or landing page copy:
 
-```python
+<CodeGroup>
+```python Python
 payload = {
     "keyword": "project management tool",
     "language_code": "en",
@@ -93,11 +133,22 @@ payload = {
 }
 ```
 
+```javascript JavaScript
+const payload = {
+  keyword: "project management tool",
+  language_code: "en",
+  location_name: "United States",
+  content_type: "landing_page",
+};
+```
+</CodeGroup>
+
 #### Additional Context
 
 Steer the AI with specific instructions:
 
-```python
+<CodeGroup>
+```python Python
 payload = {
     "keyword": "email marketing tips",
     "language_code": "en",
@@ -106,11 +157,22 @@ payload = {
 }
 ```
 
+```javascript JavaScript
+const payload = {
+  keyword: "email marketing tips",
+  language_code: "en",
+  location_name: "United States",
+  additional_insights: "Focus on e-commerce businesses. Include real-world case studies.",
+};
+```
+</CodeGroup>
+
 ### Getting Available Options
 
 Retrieve all available options before creating an order:
 
-```python
+<CodeGroup>
+```python Python
 response = requests.get(
     f"{BASE_URL}/api/writer-agent/options/",
     headers=HEADERS,
@@ -122,11 +184,25 @@ print("Content types:", options["content_types"])
 print("Tones of voice:", [t["name"] for t in options["tones_of_voice"]])
 ```
 
+```javascript JavaScript
+const response = await fetch(`${BASE_URL}/api/writer-agent/options/`, {
+  headers: { "X-API-Key": API_KEY },
+});
+
+const json = await response.json();
+const options = json.result.payload;
+console.log("Points of view:", options.points_of_view);
+console.log("Content types:", options.content_types);
+console.log("Tones of voice:", options.tones_of_voice.map((t) => t.name));
+```
+</CodeGroup>
+
 ### Retrieving Results
 
 Writer agent orders process through multiple stages (outline, plan, article). Poll until the article is generated:
 
-```python
+<CodeGroup>
+```python Python
 import os
 import time
 import requests
@@ -156,11 +232,39 @@ while True:
 print(data["generated_article"])
 ```
 
+```javascript JavaScript
+const API_KEY = process.env.KWI_API_KEY;
+const BASE_URL = "https://api.keywordinsights.ai";
+
+const order_id = "550e8400-e29b-41d4-a716-446655440000";
+
+let data;
+while (true) {
+  const response = await fetch(`${BASE_URL}/api/writer-agent/order/?id=${order_id}`, {
+    headers: { "X-API-Key": API_KEY },
+  });
+
+  const json = await response.json();
+  data = json.result.payload;
+  console.log(`Status: ${data.status || "processing"}`);
+
+  if (data.generated_article) {
+    break;
+  }
+
+  await new Promise((r) => setTimeout(r, 30000));
+}
+
+console.log(data.generated_article);
+```
+</CodeGroup>
+
 ### Complete Example
 
 End-to-end: create a writer agent order, wait for the article, and save it.
 
-```python
+<CodeGroup>
+```python Python
 import os
 import time
 import requests
@@ -176,6 +280,7 @@ def create_article(keyword, language="en", location="United States", **kwargs):
         "keyword": keyword,
         "language_code": language,
         "location_name": location,
+        "folder_id": "<your_folder_id>",
         **kwargs,
     }
     response = requests.post(
@@ -223,3 +328,65 @@ with open("article.md", "w") as f:
 
 print(f"Article saved ({len(article['generated_article'])} characters)")
 ```
+
+```javascript JavaScript
+const fs = require("fs");
+const API_KEY = process.env.KWI_API_KEY;
+const BASE_URL = "https://api.keywordinsights.ai";
+
+async function createArticle(keyword, language = "en", location = "United States", options = {}) {
+  const payload = {
+    keyword,
+    language_code: language,
+    location_name: location,
+    folder_id: "<your_folder_id>",
+    ...options,
+  };
+  const response = await fetch(`${BASE_URL}/api/writer-agent/order/`, {
+    method: "POST",
+    headers: {
+      "X-API-Key": API_KEY,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(payload),
+  });
+  const json = await response.json();
+  return json.result.payload;
+}
+
+async function waitForArticle(orderId) {
+  while (true) {
+    const response = await fetch(`${BASE_URL}/api/writer-agent/order/?id=${orderId}`, {
+      headers: { "X-API-Key": API_KEY },
+    });
+    const json = await response.json();
+    const data = json.result.payload;
+
+    if (data.generated_article) {
+      return data;
+    }
+
+    console.log(`Processing... status: ${data.status || "unknown"}`);
+    await new Promise((r) => setTimeout(r, 30000));
+  }
+}
+
+// --- Run ---
+(async () => {
+  const result = await createArticle("best project management tools for startups", "en", "United States", {
+    point_of_view: "Second Person (You)",
+    content_type: "article",
+    additional_insights: "Include comparisons and pricing information",
+  });
+  const orderId = result.id;
+  console.log(`Order created: ${orderId}`);
+
+  const article = await waitForArticle(orderId);
+
+  // Save the article
+  fs.writeFileSync("article.md", article.generated_article);
+
+  console.log(`Article saved (${article.generated_article.length} characters)`);
+})();
+```
+</CodeGroup>

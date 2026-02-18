@@ -13,7 +13,8 @@ Generate comprehensive content briefs with SERP-based headings, AI title/descrip
 
 Create a content brief for a target keyword:
 
-```python
+<CodeGroup>
+```python Python
 import os
 import requests
 
@@ -25,6 +26,7 @@ payload = {
     "keyword": "content marketing strategies",
     "language": "en",
     "location": "United States",
+    "folder_id": "<your_folder_id>",
 }
 
 response = requests.post(
@@ -37,6 +39,32 @@ data = response.json()
 print(data)
 # {"status": true, "payload": {"id": "339ca10b-...", "status": true, "cost": 500}}
 ```
+
+```javascript JavaScript
+const API_KEY = process.env.KWI_API_KEY;
+const BASE_URL = "https://api.keywordinsights.ai";
+
+const payload = {
+  keyword: "content marketing strategies",
+  language: "en",
+  location: "United States",
+  folder_id: "<your_folder_id>",
+};
+
+const response = await fetch(`${BASE_URL}/api/content-brief/order/`, {
+  method: "POST",
+  headers: {
+    "X-API-Key": API_KEY,
+    "Content-Type": "application/json",
+  },
+  body: JSON.stringify(payload),
+});
+
+const data = await response.json();
+console.log(data);
+// {"status": true, "payload": {"id": "339ca10b-...", "status": true, "cost": 500}}
+```
+</CodeGroup>
 
 ### Endpoints
 
@@ -59,18 +87,14 @@ print(data)
 | `keyword` | string | Target keyword or topic |
 | `language` | string | Language code (e.g. `en`). See `/api/content-brief/languages/` |
 | `location` | string | Location name (e.g. `United States`). See `/api/keywords-insights/locations/` |
-
-#### Create Brief — Optional
-
-| Parameter | Type | Description |
-| --- | --- | --- |
-| `folder_id` | string | Dashboard folder ID to save the project into |
+| `folder_id` | string | Dashboard folder ID to save the project into. Retrieve from the browser URL in the KWI dashboard |
 
 ### Retrieving Results
 
 Content briefs process asynchronously. Poll the results endpoint until the data is ready:
 
-```python
+<CodeGroup>
+```python Python
 import os
 import time
 import requests
@@ -104,6 +128,38 @@ print(f"Pages analyzed: {data['pages_count']}")
 print(f"Headings found: {data['headings_count']}")
 ```
 
+```javascript JavaScript
+const API_KEY = process.env.KWI_API_KEY;
+const BASE_URL = "https://api.keywordinsights.ai";
+
+const order_id = "339ca10b-80c1-4248-b8d0-c11377c204c7";
+
+let data;
+while (true) {
+  const response = await fetch(`${BASE_URL}/api/content-brief/order/?id=${order_id}`, {
+    headers: { "X-API-Key": API_KEY },
+  });
+
+  const json = await response.json();
+  data = json.result.payload;
+
+  if (data.status) {
+    break;
+  }
+
+  console.log("Processing...");
+  await new Promise((r) => setTimeout(r, 15000));
+}
+
+// Brief is ready
+console.log(`Keyword: ${data.keyword}`);
+console.log(`Avg word count: ${data.word_count_avg}`);
+console.log(`Recommended: ${data.word_count_min}–${data.word_count_max} words`);
+console.log(`Pages analyzed: ${data.pages_count}`);
+console.log(`Headings found: ${data.headings_count}`);
+```
+</CodeGroup>
+
 The results include:
 
 | Field | Description |
@@ -121,7 +177,8 @@ The results include:
 
 After a content brief is complete, you can generate an AI-powered outline:
 
-```python
+<CodeGroup>
+```python Python
 # Step 1: Trigger outline generation
 response = requests.post(
     f"{BASE_URL}/api/content-brief/order/{order_id}/outline/",
@@ -149,11 +206,50 @@ while True:
 print(data["string"])  # Full outline as text
 ```
 
+```javascript JavaScript
+// Step 1: Trigger outline generation
+const response = await fetch(`${BASE_URL}/api/content-brief/order/${order_id}/outline/`, {
+  method: "POST",
+  headers: {
+    "X-API-Key": API_KEY,
+    "Content-Type": "application/json",
+  },
+  body: JSON.stringify({ additional_context: "Focus on B2B companies" }), // optional
+});
+
+const json = await response.json();
+const auto_id = json.result.payload.auto_generate_order_id;
+
+// Step 2: Poll until outline is ready
+let data;
+while (true) {
+  const response = await fetch(
+    `${BASE_URL}/api/content-brief/order/${order_id}/outline/?auto_generate_order_id=${auto_id}`,
+    {
+      headers: { "X-API-Key": API_KEY },
+    }
+  );
+
+  const json = await response.json();
+  data = json.result.payload;
+
+  if (data.status) {
+    break;
+  }
+
+  await new Promise((r) => setTimeout(r, 10000));
+}
+
+console.log(data.string); // Full outline as text
+```
+</CodeGroup>
+
 ### Listing Briefs
 
 Retrieve a paginated list of all your content briefs:
 
-```python
+<CodeGroup>
+```python Python
 response = requests.get(
     f"{BASE_URL}/api/content-brief/orders/",
     headers=HEADERS,
@@ -167,11 +263,27 @@ for brief in data["orders"]:
     print(f"  {brief['keyword']} — {brief['status']}")
 ```
 
+```javascript JavaScript
+const response = await fetch(`${BASE_URL}/api/content-brief/orders/?page=1&page_size=20`, {
+  headers: { "X-API-Key": API_KEY },
+});
+
+const json = await response.json();
+const data = json.result.payload;
+console.log(`Total briefs: ${data.total_orders}`);
+
+for (const brief of data.orders) {
+  console.log(`  ${brief.keyword} — ${brief.status}`);
+}
+```
+</CodeGroup>
+
 ### Complete Example
 
 End-to-end: create a content brief, wait for results, then generate an AI outline.
 
-```python
+<CodeGroup>
+```python Python
 import os
 import time
 import requests
@@ -186,7 +298,7 @@ def create_brief(keyword, language="en", location="United States"):
     response = requests.post(
         f"{BASE_URL}/api/content-brief/order/",
         headers=HEADERS,
-        json={"keyword": keyword, "language": language, "location": location},
+        json={"keyword": keyword, "language": language, "location": location, "folder_id": "<your_folder_id>"},
     )
     response.raise_for_status()
     return response.json()["result"]["payload"]
@@ -245,3 +357,83 @@ print(f"Title suggestions: {brief['brief_title_suggests']}")
 outline = generate_outline(order_id, context="Focus on remote teams")
 print(f"\nAI Outline:\n{outline['string']}")
 ```
+
+```javascript JavaScript
+const API_KEY = process.env.KWI_API_KEY;
+const BASE_URL = "https://api.keywordinsights.ai";
+
+async function createBrief(keyword, language = "en", location = "United States") {
+  const response = await fetch(`${BASE_URL}/api/content-brief/order/`, {
+    method: "POST",
+    headers: {
+      "X-API-Key": API_KEY,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ keyword, language, location, folder_id: "<your_folder_id>" }),
+  });
+  const json = await response.json();
+  return json.result.payload;
+}
+
+async function waitForBrief(orderId) {
+  while (true) {
+    const response = await fetch(`${BASE_URL}/api/content-brief/order/?id=${orderId}`, {
+      headers: { "X-API-Key": API_KEY },
+    });
+    const json = await response.json();
+    const data = json.result.payload;
+
+    if (data.status) {
+      return data;
+    }
+
+    console.log("Brief processing...");
+    await new Promise((r) => setTimeout(r, 15000));
+  }
+}
+
+async function generateOutline(orderId, context = "") {
+  const response = await fetch(`${BASE_URL}/api/content-brief/order/${orderId}/outline/`, {
+    method: "POST",
+    headers: {
+      "X-API-Key": API_KEY,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ additional_context: context }),
+  });
+  const json = await response.json();
+  const autoId = json.result.payload.auto_generate_order_id;
+
+  while (true) {
+    const response = await fetch(
+      `${BASE_URL}/api/content-brief/order/${orderId}/outline/?auto_generate_order_id=${autoId}`,
+      {
+        headers: { "X-API-Key": API_KEY },
+      }
+    );
+    const json = await response.json();
+    const data = json.result.payload;
+
+    if (data.status) {
+      return data;
+    }
+
+    await new Promise((r) => setTimeout(r, 10000));
+  }
+}
+
+// --- Run ---
+(async () => {
+  const result = await createBrief("best project management tools");
+  const orderId = result.id;
+  console.log(`Brief created: ${orderId} (cost: ${result.cost} credits)`);
+
+  const brief = await waitForBrief(orderId);
+  console.log(`Target: ${brief.word_count_min}–${brief.word_count_max} words`);
+  console.log(`Title suggestions: ${brief.brief_title_suggests}`);
+
+  const outline = await generateOutline(orderId, "Focus on remote teams");
+  console.log(`\nAI Outline:\n${outline.string}`);
+})();
+```
+</CodeGroup>

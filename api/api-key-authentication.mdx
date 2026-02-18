@@ -31,7 +31,8 @@ After you close the modal, the key list will show only the prefix (e.g. `kwi_sk_
 
 Pass your API key in the `X-API-Key` header with every request:
 
-```python
+<CodeGroup>
+```python Python
 import requests
 
 API_KEY = "kwi_sk_your_api_key_here"
@@ -44,6 +45,23 @@ response = requests.get(
 
 print(response.json())
 ```
+
+```javascript JavaScript
+const API_KEY = "kwi_sk_your_api_key_here";
+const BASE_URL = "https://api.keywordinsights.ai";
+
+async function getUser() {
+  const response = await fetch(`${BASE_URL}/api/user/`, {
+    headers: { "X-API-Key": API_KEY },
+  });
+
+  const data = await response.json();
+  console.log(data);
+}
+
+getUser();
+```
+</CodeGroup>
 
 <Warning>
   Treat your API key like a password. Do not commit it to version control or share it publicly. Use environment variables to store it securely.
@@ -59,15 +77,22 @@ export KWI_API_KEY="kwi_sk_your_api_key_here"
 
 Then in Python:
 
-```python
+<CodeGroup>
+```python Python
 import os
 
 API_KEY = os.environ["KWI_API_KEY"]
 ```
 
+```javascript JavaScript
+const API_KEY = process.env.KWI_API_KEY;
+```
+</CodeGroup>
+
 ### Example: Create a Clustering Order
 
-```python
+<CodeGroup>
+```python Python
 import os
 import requests
 
@@ -90,6 +115,7 @@ payload = {
     "hub_creation_method": "medium",
     "insights": ["cluster", "rank", "context"],
     "url": "https://example.com",
+    "folder_id": "<your_folder_id>",
 }
 
 response = requests.post(
@@ -102,101 +128,48 @@ order = response.json()
 print(order)
 ```
 
-The response will contain an `order_id` that you'll use to retrieve results once the order is processed.
+```javascript JavaScript
+const API_KEY = process.env.KWI_API_KEY;
+const BASE_URL = "https://api.keywordinsights.ai";
 
-### Example: Chained Requests
+const payload = {
+  project_name: "My clustering project",
+  keywords: [
+    "keyword clustering",
+    "keyword research",
+    "topical authority",
+  ],
+  search_volumes: [2300, 3210, 5500],
+  language: "en",
+  location: "United States",
+  device: "desktop",
+  clustering_method: "volume",
+  grouping_accuracy: 4,
+  hub_creation_method: "medium",
+  insights: ["cluster", "rank", "context"],
+  url: "https://example.com",
+  folder_id: "<your_folder_id>",
+};
 
-A typical workflow involves creating an order and then retrieving the results once processing is complete. Here's a complete example that creates a clustering order, polls for completion, and downloads the results:
+async function createOrder() {
+  const response = await fetch(`${BASE_URL}/api/keywords-insights/order/`, {
+    method: "POST",
+    headers: {
+      "X-API-Key": API_KEY,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(payload),
+  });
 
-```python
-import os
-import time
-import requests
+  const order = await response.json();
+  console.log(order);
+}
 
-API_KEY = os.environ["KWI_API_KEY"]
-BASE_URL = "https://api.keywordinsights.ai"
-HEADERS = {"X-API-Key": API_KEY}
-
-
-def create_order(keywords, search_volumes):
-    """Create a clustering order and return the order ID."""
-    payload = {
-        "project_name": "Chained API example",
-        "keywords": keywords,
-        "search_volumes": search_volumes,
-        "language": "en",
-        "location": "United States",
-        "device": "desktop",
-        "clustering_method": "volume",
-        "grouping_accuracy": 4,
-        "hub_creation_method": "medium",
-        "insights": ["cluster", "context"],
-        "url": "https://example.com",
-    }
-
-    response = requests.post(
-        f"{BASE_URL}/api/keywords-insights/order/",
-        headers=HEADERS,
-        json=payload,
-    )
-    response.raise_for_status()
-    return response.json()
-
-
-def get_order_status(order_id):
-    """Check if the order has finished processing."""
-    response = requests.get(
-        f"{BASE_URL}/api/keywords-insights/order/{order_id}/",
-        headers=HEADERS,
-    )
-    response.raise_for_status()
-    return response.json()
-
-
-def get_results_json(order_id, page_size=50, page_number=1):
-    """Retrieve clustering results as JSON."""
-    response = requests.get(
-        f"{BASE_URL}/api/keywords-insights/order/json/{order_id}/",
-        headers=HEADERS,
-        params={
-            "page_size": page_size,
-            "page_number": page_number,
-            "sort_by": "search_volume",
-            "ascending": False,
-        },
-    )
-    response.raise_for_status()
-    return response.json()
-
-
-# --- Run the workflow ---
-
-keywords = ["best running shoes", "running shoes review", "top sneakers for running"]
-volumes = [12000, 8500, 3200]
-
-# Step 1: Create the order
-order = create_order(keywords, volumes)
-order_id = order["result"]["order_id"]
-print(f"Order created: {order_id}")
-
-# Step 2: Poll until complete
-while True:
-    status = get_order_status(order_id)
-    state = status["result"]["status"]
-    print(f"Status: {state}")
-
-    if state == "completed":
-        break
-
-    time.sleep(30)  # wait 30 seconds before checking again
-
-# Step 3: Get the results
-results = get_results_json(order_id)
-print(f"Got {len(results['result']['items'])} clusters")
-
-for cluster in results["result"]["items"]:
-    print(f"  - {cluster['cluster_name']} ({cluster['cluster_size']} keywords)")
+createOrder();
 ```
+</CodeGroup>
+
+The response will contain an `order_id` that you'll use to retrieve results once the order is processed.
 
 ### Managing API Keys
 
@@ -228,12 +201,22 @@ To delete a key, click the trash icon next to the key and confirm the deletion.
 
 If you have existing code using Bearer tokens, switching to API keys is a one-line change — replace the `Authorization` header with `X-API-Key`:
 
-```python
+<CodeGroup>
+```python Python
 # Before (deprecated)
 headers = {"Authorization": f"Bearer {JWT_TOKEN}"}
 
 # After (recommended)
 headers = {"X-API-Key": API_KEY}
 ```
+
+```javascript JavaScript
+// Before (deprecated)
+const headers = { "Authorization": `Bearer ${JWT_TOKEN}` };
+
+// After (recommended)
+const headers = { "X-API-Key": API_KEY };
+```
+</CodeGroup>
 
 No other changes are needed — all API endpoints accept both authentication methods.

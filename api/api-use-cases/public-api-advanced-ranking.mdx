@@ -13,7 +13,8 @@ Analyze how a domain ranks for any keyword — get top SERP URLs, domain positio
 
 Check how a domain ranks for a single keyword:
 
-```python
+<CodeGroup>
+```python Python
 import os
 import requests
 
@@ -38,6 +39,37 @@ data = response.json()
 print(data)
 # {"status": true, "order_id": "2879fa0b-...", "cost": 1}
 ```
+
+```javascript JavaScript
+const API_KEY = process.env.KWI_API_KEY;
+const BASE_URL = "https://api.keywordinsights.ai";
+const HEADERS = {
+  "X-API-Key": API_KEY,
+  "Content-Type": "application/json"
+};
+
+const payload = {
+  keyword: "project management software",
+  domain: "asana.com",
+  language: "en",
+  location: "United States",
+};
+
+async function createOrder() {
+  const response = await fetch(`${BASE_URL}/api/advanced-ranking/order/`, {
+    method: "POST",
+    headers: HEADERS,
+    body: JSON.stringify(payload),
+  });
+
+  const data = await response.json();
+  console.log(data);
+  // {"status": true, "order_id": "2879fa0b-...", "cost": 1}
+}
+
+createOrder();
+```
+</CodeGroup>
 
 ### Endpoints
 
@@ -92,7 +124,8 @@ Same as single keyword: `device`, `include_word_count`.
 
 Enable `include_word_count` to get word counts for the top 10 ranking URLs. Useful for benchmarking content length:
 
-```python
+<CodeGroup>
+```python Python
 payload = {
     "keyword": "best CRM software",
     "domain": "hubspot.com",
@@ -102,11 +135,23 @@ payload = {
 }
 ```
 
+```javascript JavaScript
+const payload = {
+  keyword: "best CRM software",
+  domain: "hubspot.com",
+  language: "en",
+  location: "United States",
+  include_word_count: true, // 10 credits instead of 1
+};
+```
+</CodeGroup>
+
 #### Batch Ranking
 
 Analyze multiple keywords at once:
 
-```python
+<CodeGroup>
+```python Python
 payload = {
     "keywords": [
         "project management software",
@@ -128,11 +173,39 @@ data = response.json()
 print(f"Batch order: {data['order_id']} (cost: {data['cost']} credits)")
 ```
 
+```javascript JavaScript
+const payload = {
+  keywords: [
+    "project management software",
+    "best project management tools",
+    "project management for teams",
+  ],
+  domain: "asana.com",
+  language: "en",
+  location: "United States",
+};
+
+async function createBatchOrder() {
+  const response = await fetch(`${BASE_URL}/api/advanced-ranking/batch/order/`, {
+    method: "POST",
+    headers: HEADERS,
+    body: JSON.stringify(payload),
+  });
+
+  const data = await response.json();
+  console.log(`Batch order: ${data.order_id} (cost: ${data.cost} credits)`);
+}
+
+createBatchOrder();
+```
+</CodeGroup>
+
 ### Retrieving Results
 
 Poll until the order status is `"done"`:
 
-```python
+<CodeGroup>
+```python Python
 import os
 import time
 import requests
@@ -173,6 +246,55 @@ print(f"\nRelated searches: {results['related_searches']}")
 print(f"People Also Ask: {results['related_questions']}")
 ```
 
+```javascript JavaScript
+const API_KEY = process.env.KWI_API_KEY;
+const BASE_URL = "https://api.keywordinsights.ai";
+const HEADERS = { "X-API-Key": API_KEY };
+
+const order_id = "2879fa0b-deae-4aab-ad87-fd8fb8db9717";
+
+async function getResults() {
+  let data;
+  while (true) {
+    const url = new URL(`${BASE_URL}/api/advanced-ranking/order/`);
+    url.searchParams.append("order_id", order_id);
+
+    const response = await fetch(url, {
+      headers: HEADERS,
+    });
+
+    const json = await response.json();
+    data = json.result.payload;
+
+    if (data.status === "done") {
+      break;
+    }
+
+    console.log("Processing...");
+    await new Promise((r) => setTimeout(r, 10000));
+  }
+
+  const results = data.results;
+  console.log(`Domain URLs in top 100: ${results.n_domain_rankings}`);
+
+  for (const ranking of results.domain_rankings) {
+    console.log(`  #${ranking.rank} — ${ranking.url}`);
+  }
+
+  console.log("\nTop 10 SERP results:");
+  for (const url_data of results.top_rankings) {
+    const wc = url_data.word_count ? ` (${url_data.word_count} words)` : "";
+    console.log(`  ${url_data.url}${wc}`);
+  }
+
+  console.log(`\nRelated searches: ${results.related_searches}`);
+  console.log(`People Also Ask: ${results.related_questions}`);
+}
+
+getResults();
+```
+</CodeGroup>
+
 The results include:
 
 | Field | Description |
@@ -187,7 +309,8 @@ The results include:
 
 Analyze a domain's rankings for multiple keywords and summarize the results:
 
-```python
+<CodeGroup>
+```python Python
 import os
 import time
 import requests
@@ -250,3 +373,79 @@ for item in results:
     for r in item["domain_rankings"][:3]:
         print(f"  #{r['rank']} — {r['url']}")
 ```
+
+```javascript JavaScript
+const API_KEY = process.env.KWI_API_KEY;
+const BASE_URL = "https://api.keywordinsights.ai";
+const HEADERS = {
+  "X-API-Key": API_KEY,
+  "Content-Type": "application/json"
+};
+
+async function createBatch(keywords, domain, language = "en", location = "United States") {
+  const response = await fetch(`${BASE_URL}/api/advanced-ranking/batch/order/`, {
+    method: "POST",
+    headers: HEADERS,
+    body: JSON.stringify({
+      keywords,
+      domain,
+      language,
+      location,
+      include_word_count: true,
+    }),
+  });
+
+  if (!response.ok) {
+    throw new Error(`HTTP error! status: ${response.status}`);
+  }
+
+  return await response.json();
+}
+
+async function waitForBatch(order_id) {
+  while (true) {
+    const url = new URL(`${BASE_URL}/api/advanced-ranking/batch/order/`);
+    url.searchParams.append("order_id", order_id);
+
+    const response = await fetch(url, {
+      headers: HEADERS,
+    });
+
+    const json = await response.json();
+    const data = json.result.payload;
+
+    if (data.status === "done") {
+      return data.results;
+    }
+
+    console.log("Processing...");
+    await new Promise((r) => setTimeout(r, 15000));
+  }
+}
+
+// --- Run ---
+
+async function run() {
+  const keywords = [
+    "project management software",
+    "task management tool",
+    "team collaboration software",
+  ];
+
+  const result = await createBatch(keywords, "asana.com");
+  const order_id = result.order_id;
+  console.log(`Batch created: ${order_id} (cost: ${result.cost} credits)`);
+
+  const results = await waitForBatch(order_id);
+
+  for (const item of results) {
+    console.log(`\n'${item.keyword}': ${item.n_domain_rankings} URLs in top 100`);
+    for (const r of item.domain_rankings.slice(0, 3)) {
+      console.log(`  #${r.rank} — ${r.url}`);
+    }
+  }
+}
+
+run();
+```
+</CodeGroup>
