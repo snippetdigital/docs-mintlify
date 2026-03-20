@@ -1,6 +1,6 @@
 ---
-title: "N8N - Writer Assistant"
-description: "Create a basic N8N Flow for Writer Assistant Orders"
+title: "N8N - Keyword Discovery"
+description: "Create a basic N8N Flow for Keyword Discovery Orders"
 ---
 
 ## Step 1 - Authentication via API key
@@ -22,46 +22,20 @@ description: "Create a basic N8N Flow for Writer Assistant Orders"
 - Body -> JSON: `{  "email": "<email>",  "password": "<password>"}`
 ![Authentication section in Mintlify](/images/mintlify-simple-auth.png)
 
-## Step 2 - Creating a Writer Assistant Order
+## Step 2 - Creating a Keyword Discovery Order
 - Ensure the output of the Auth node shows in the second node if you are using the legacy username and sandbox
 
 ![Authentication section in Mintlify](/images/mintlify-content-brief-order-1.png)
 - Paste the following json into the body, 
   - `folder_id`: optional if you want the project placed in a specific folder
-  - `secondary_keywords`: optional to provide more detail
-  - `workflow_type`: NEW | OPTIMIZE | CONTENT_BRIEF
-- `keywords`: pass up to 25 keywords, in a comma separated list within the array brackets `[]`
 
-### Workflow Type: NEW
 ```
 {
-  "folder_id": "",
-  "keyword": "how to become a model",
-  "language": "en",
-  "location": "United States",
-  "secondary_keywords": [],
-  "workflow_type": "NEW"
-}
-```
-### Workflow Type: CONTENT_BRIEF
-- `content_brief_order_id`: equired parameter of an existing content brief from which you plan to create a Writer Assistant Order
-```
-{
-  "folder_id": "",
-  "workflow_type": "CONTENT_BRIEF",
-  "content_brief_order_id": "str"
+    "folder_id": "",
+    "language": "en",
+    "location": "United Kingdom",
+    "seed_keyword": "how to become a model in ukraine"
 }
 ```
 
-### Workflow Type: OPTIMIZE
-```
-{
-  "folder_id": "",
-  "keyword": "news",
-  "language": "en",
-  "location": "United States",
-  "workflow_type": "OPTIMIZE",
-  "content_url": "https://www.bbc.com/...."
-}
-```
-![Body payload for Writer Assistant Orders](/images/mintlify-writer-assistant-1.png)
+![Body payload for keyword discovery](/images/mintlify-keyword-discovery-order-1.png)
