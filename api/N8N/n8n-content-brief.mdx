@@ -1,0 +1,41 @@
+---
+title: "N8N - Content Brief"
+description: "Create a basic N8N Flow for Content Briefs"
+---
+
+## Step 1 - Authentication via API key
+- Use an HTTP Request node and select the following options:
+- Authentication: `Generic Credential Type`
+- Generic Auth Type: `Header Auth`
+- Header Auth: `Header Auth account`
+![Authentication section in Mintlify](/images/mintlify-api-auth-main-window.png)
+- Then click the `Edit Pencil icon` to open up the detail model to enter your API key:
+- Then in the modal, add X-API-KEY: `kwi_sk_aBcDeFgHiJkLmNoPqRsTuVwXyZ1234567890abc`
+![Authentication section in Mintlify](/images/mintlify-api-auth-main-window-detail.png)
+
+### Alternatively you can authenticate via username and password
+- Use an HTTP Request node
+- URL: `Keywordinsightsapi.keywordinsights.ai//authentication/login`
+- Method: `POST`
+- Body -> JSON: `{  "email": "<email>",  "password": "<password>"}`
+![Authentication section in Mintlify](/images/mintlify-simple-auth.png)
+
+## Step 2 - Creating a Content Brief order
+- Ensure the output of the Auth node shows in the second node
+![Authentication section in Mintlify](/images/mintlify-content-brief-order-1.png)
+- Paste the following json into the body, 
+  - `folder_id`: optional if you want the project placed in a specific folder
+  - `secondary_keywords`: optional to provide more detail
+- `keywords`: pass up to 25 keywords, in a comma separated list within the array brackets `[]`
+```
+{
+  "keywords": ["how to become a model"],
+  "language": "en",
+  "location": "United States",
+  "title_ai_order_id": "",
+  "title": "",
+  "folder_id": "",
+  "secondary_keywords": ""
+}mintlify
+```
+![Authentication section in Mintlify](/images/mintlify-content-brief-2.png)
