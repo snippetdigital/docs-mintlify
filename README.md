@@ -32,6 +32,8 @@ View your local preview at `http://localhost:3000`.
 
 Install our GitHub app from your [dashboard](https://dashboard.mintlify.com/settings/organization/github-app) to propagate changes from your repo to your deployment. Changes are deployed to production automatically after pushing to the default branch.
 
+When creating new pages make sure they are added to docs.json for them to show up in the menu. (and be aware of folder name casing, e.g n8n != N8N)
+
 ## Need help?
 
 ### Troubleshooting
